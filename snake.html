@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake Game</title>
+  <style>
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px 0;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+    }
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 582px;
+      max-width: 100%;
+    }
+    .hidden { display: none; }
+
+    canvas {
+      background: #16213e;
+      border: 3px solid #e94560;
+      border-radius: 8px;
+      max-width: 100%;
+      height: auto;
+    }
+    .gold { color: gold; font-weight: bold; }
+
+    /* ---- Menu ---- */
+    h1 {
+      margin: 0 0 10px;
+      font-size: 56px;
+      letter-spacing: 10px;
+      color: #e94560;
+    }
+    #previewLabel {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #aab;
+      height: 18px;
+    }
+    #menuStats {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    #menuHint {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #aab;
+    }
+    .bigBtn {
+      margin-top: 14px;
+      padding: 14px 48px;
+      font-size: 22px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .bigBtn:hover { background: #ff5c78; }
+
+    /* ---- Two panels, one under the other (top right) ---- */
+    #sidePanels {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      width: 400px;
+      max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel {
+      flex-shrink: 0;
+      background: #1b2444;
+      border: 2px solid #2d3a66;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    .panelHead {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: bold;
+      color: white;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .panelHead:hover { color: #ff8da0; }
+    .panelBody { padding: 0 12px 12px; }
+    .coinsLine { font-size: 14px; margin-bottom: 8px; }
+    #legend {
+      font-size: 12px;
+      color: #aab;
+      margin-bottom: 8px;
+    }
+    .msg {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 14px;
+      color: gold;
+      text-align: center;
+    }
+
+    /* Skin cards */
+    #shop {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .card {
+      font: inherit;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .card:hover { border-color: #e94560; }
+    .card.equipped { border-color: gold; }
+    .card.cant { opacity: 0.55; }
+    .card canvas.preview {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .card small {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: #aab;
+    }
+
+    /* Skill rows */
+    .skillRow {
+      display: grid;
+      grid-template-columns: 48px 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .skillRow canvas.skillPrev {
+      display: block;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+    }
+    .skillRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .buyBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .buyBtn:hover { background: #ff5c78; }
+    .buyBtn.cant { opacity: 0.5; }
+    .infoBtn {
+      width: 28px;
+      height: 28px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .infoBtn:hover { background: #3b4b85; }
+    .skillDesc {
+      grid-column: 1 / -1;
+      font-size: 13px;
+      color: #cdd5f0;
+      background: #16213e;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    /* Achievements */
+    .headRight { display: flex; align-items: center; }
+    .badge2 {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      border-radius: 10px;
+      background: #e94560;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge2.hidden { display: none; }
+    .achRow {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .achRow.ready { border-color: gold; }
+    .achRow.claimed { opacity: 0.6; }
+    .achIcon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2d3a66;
+      color: #8892b0;
+      font-size: 18px;
+    }
+    .achRow.ready .achIcon, .achRow.claimed .achIcon { background: gold; color: #7a5c00; }
+    .achRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .bar {
+      height: 6px;
+      margin-top: 6px;
+      background: #16213e;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar > div { height: 100%; background: #e94560; }
+    .achRow.ready .bar > div, .achRow.claimed .bar > div { background: gold; }
+    .claimBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: #3a2a00;
+      background: gold;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .claimBtn:hover { background: #ffe066; }
+    .achStatus {
+      font-size: 12px;
+      color: #aab;
+      text-align: right;
+    }
+    #toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 50;
+      max-width: min(280px, calc(100vw - 28px));
+      padding: 8px 12px;
+      font-size: 13px;
+      color: white;
+      background: rgba(27, 36, 68, 0.92);
+      border: 1px solid gold;
+      border-radius: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ---- Game ---- */
+    #skillBar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    canvas.skillIcon {
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+    #hud {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 576px;
+      max-width: 100%;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    #hud span { color: #e94560; font-weight: bold; }
+    #hud span.gold { color: gold; }
+    #overBtns {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .actBtn {
+      padding: 10px 22px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .actBtn:hover { background: #ff5c78; }
+    .actBtn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #restartBtn { background: #2d3a66; }
+    #restartBtn:hover { background: #3b4b85; }
+    #menuBtn {
+      margin-top: 12px;
+      padding: 8px 22px;
+      font-size: 15px;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #menuBtn:hover { background: #3b4b85; }
+    #hubLink { position: fixed; top: 10px; left: 10px; z-index: 50; padding: 6px 12px;
+      background: rgba(20,28,60,0.85); color: #cfe0ff; border: 1px solid #3b4b85; border-radius: 16px;
+      font: 600 13px Arial, sans-serif; text-decoration: none; }
+    #hubLink:hover { background: #3b4b85; }
+    #menuBtns { display: flex; gap: 14px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .twoBtn { background: #3a7bd5; }
+    .twoBtn:hover { background: #5b97ec; }
+  </style>
+</head>
+<body>
+  <a id="hubLink" href="index.html">&larr; Animals</a>
+
+  <!-- ================= MENU SCREEN ================= -->
+  <div id="menuScreen" class="screen">
+
+    <div id="sidePanels">
+      <div class="panel">
+        <button id="skinsHead" class="panelHead"><span>Skins</span><span id="skinsArrow">&#9662;</span></button>
+        <div id="skinsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skinsCoins" class="gold">0</span></div>
+          <div id="legend"></div>
+          <div id="shop"></div>
+          <div id="skinMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="skillsHead" class="panelHead"><span>Skills</span><span id="skillsArrow">&#9662;</span></button>
+        <div id="skillsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skillsCoins" class="gold">0</span></div>
+          <div id="skillsLegend"></div>
+          <div id="skillList"></div>
+          <div id="skillMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="achHead" class="panelHead"><span>Achievements</span><span class="headRight"><span id="achBadge" class="badge2 hidden">0</span><span id="achArrow">&#9662;</span></span></button>
+        <div id="achBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="achCoins" class="gold">0</span> &nbsp;|&nbsp; <span id="achSummary"></span></div>
+          <button id="claimAll" class="claimBtn hidden" style="width:100%;margin-bottom:8px">Claim all</button>
+          <div id="achList"></div>
+          <div id="achMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <h1>SNAKE</h1>
+    <canvas id="menuCanvas" width="576" height="200"></canvas>
+    <div id="previewLabel"></div>
+
+    <div id="menuStats">
+      Coins: <span id="menuCoins" class="gold">0</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Best: <span id="menuBest" class="gold">0</span>
+    </div>
+
+    <div id="menuBtns">
+      <button id="startBtn" class="bigBtn">Start Game</button>
+      <button id="twoBtn" class="bigBtn twoBtn">2 Players</button>
+    </div>
+    <div id="menuHint">Open the panels (top right) for skins, skills and achievements.</div>
+  </div>
+
+  <!-- ================= GAME SCREEN ================= -->
+  <div id="gameScreen" class="screen hidden">
+    <div id="skillBar"></div>
+    <div id="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Level: <span id="level">1</span></div>
+      <div>Rank: <span id="rank">Baby Snake</span></div>
+      <div>Best: <span id="best">0</span></div>
+      <div>Coins: <span id="coins" class="gold">0</span></div>
+    </div>
+    <canvas id="game" width="576" height="576"></canvas>
+    <div id="overBtns">
+      <button id="continueBtn" class="actBtn" style="display:none">Continue</button>
+      <button id="restartBtn" class="actBtn" style="display:none">Play again</button>
+    </div>
+    <button id="menuBtn">Menu</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const menuCanvas = document.getElementById("menuCanvas");
+    const mctx = menuCanvas.getContext("2d");
+
+    // A second canvas, used to draw the snake see-through in Ghost Mode
+    const layer = document.createElement("canvas");
+    layer.width = canvas.width;
+    layer.height = canvas.height;
+    const lctx = layer.getContext("2d");
+
+    const gridSize = 32;
+    // ---- Background: a calm, old-fashioned "jungle temple" look with a few faint vines at the edges ----
+    // It is drawn only once (on a hidden canvas), so it costs nothing while you play.
+    function makeVineBackground(w, h, seed) {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const g = c.getContext("2d");
+      let s = seed || 1;
+      const rnd = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+
+      // flat, dark mossy base
+      g.fillStyle = "#1b2a29";
+      g.fillRect(0, 0, w, h);
+
+      // very faint old stone tiles
+      g.strokeStyle = "rgba(255,255,255,0.025)";
+      g.lineWidth = 1;
+      const tile = 64;
+      g.beginPath();
+      for (let x = tile; x < w; x += tile) { g.moveTo(x + 0.5, 0); g.lineTo(x + 0.5, h); }
+      for (let y = tile; y < h; y += tile) { g.moveTo(0, y + 0.5); g.lineTo(w, y + 0.5); }
+      g.stroke();
+
+      // soft darker corners (vignette)
+      const vg = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.max(w, h) * 0.75);
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, "rgba(0,0,0,0.28)");
+      g.fillStyle = vg;
+      g.fillRect(0, 0, w, h);
+
+      const vineCol = "rgba(62,112,76,0.55)";
+      const leafCols = ["rgba(70,128,84,0.5)", "rgba(88,148,96,0.42)", "rgba(54,104,70,0.55)"];
+
+      function leaf(x, y, ang, size) {
+        g.fillStyle = leafCols[Math.floor(rnd() * leafCols.length)];
+        g.beginPath();
+        g.ellipse(x, y, size, size * 0.45, ang, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // one wavy vine, leaves on both sides
+      function vine(x0, y0, ang, len, wob, thick) {
+        const ux = Math.cos(ang), uy = Math.sin(ang);
+        const nx = -uy, ny = ux;
+        const ph = rnd() * 6;
+        g.strokeStyle = vineCol;
+        g.lineWidth = thick;
+        g.lineCap = "round";
+        g.beginPath();
+        let lastLeaf = 0;
+        const pts = [];
+        for (let t = 0; t <= len; t += 4) {
+          const o = Math.sin(t / 22 + ph) * wob;
+          const px = x0 + ux * t + nx * o;
+          const py = y0 + uy * t + ny * o;
+          pts.push([px, py, t]);
+          if (t === 0) g.moveTo(px, py); else g.lineTo(px, py);
+        }
+        g.stroke();
+        let side = 1;
+        for (const p of pts) {
+          if (p[2] - lastLeaf >= 15 && p[2] < len - 6) {
+            lastLeaf = p[2];
+            const size = 6 + rnd() * 4 - (p[2] / len) * 2.5;
+            leaf(p[0] + nx * side * 5, p[1] + ny * side * 5, ang + side * 0.9 + (rnd() - 0.5) * 0.4, size);
+            side = -side;
+          }
+        }
+        // a tiny curl at the end
+        g.beginPath();
+        const e = pts[pts.length - 1];
+        g.arc(e[0] + ux * 3, e[1] + uy * 3, 3, 0, Math.PI * 1.6);
+        g.stroke();
+        return pts;
+      }
+
+      function flower(x, y) {
+        g.fillStyle = rnd() < 0.5 ? "rgba(214,170,80,0.5)" : "rgba(200,120,120,0.45)";
+        for (let i = 0; i < 5; i++) {
+          const a = i / 5 * Math.PI * 2;
+          g.beginPath(); g.arc(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2, 0, Math.PI * 2); g.fill();
+        }
+        g.fillStyle = "rgba(240,220,150,0.55)";
+        g.beginPath(); g.arc(x, y, 1.6, 0, Math.PI * 2); g.fill();
+      }
+
+      const m = Math.min(w, h);
+      // vines hanging from the top edge
+      const nTop = Math.max(3, Math.round(w / 120));
+      for (let i = 0; i < nTop; i++) {
+        const x = (i + 0.3 + rnd() * 0.4) * w / nTop;
+        const pts = vine(x, -4, Math.PI / 2 + (rnd() - 0.5) * 0.2, m * (0.07 + rnd() * 0.13), 5, 2.4);
+        if (rnd() < 0.5) { const p = pts[Math.floor(pts.length * 0.6)]; flower(p[0] + 6, p[1]); }
+      }
+      // vines creeping in from the four corners, along the edges
+      const corners = [[0, 0, 0, 1], [w, 0, Math.PI, 1], [0, h, 0, -1], [w, h, Math.PI, -1]];
+      for (const k of corners) {
+        const pts = vine(k[0], k[1] + k[3] * 3, k[2] + k[3] * 0.18, m * 0.3, 7, 3);
+        const p = pts[Math.floor(pts.length * 0.7)];
+        flower(p[0], p[1] + k[3] * 8);
+        vine(k[0] + (k[2] === 0 ? 3 : -3), k[1], k[3] > 0 ? Math.PI / 2 : -Math.PI / 2, m * 0.24, 6, 2.6);
+      }
+      // a few small leaves/dots scattered near the edges only
+      for (let i = 0; i < 18; i++) {
+        const edge = Math.floor(rnd() * 4);
+        const along = rnd();
+        const d = 4 + rnd() * 16;
+        const x = edge === 0 ? along * w : edge === 1 ? w - d : edge === 2 ? along * w : d;
+        const y = edge === 0 ? d : edge === 1 ? along * h : edge === 2 ? h - d : along * h;
+        leaf(x, y, rnd() * 3, 4 + rnd() * 3);
+      }
+      return c;
+    }
+
+    const gameBg = makeVineBackground(canvas.width, canvas.height, 7);
+    const menuBg = makeVineBackground(menuCanvas.width, menuCanvas.height, 11);
+    const tileCount = canvas.width / gridSize;
+    const bodyRadius = (gridSize - 6) / 2;
+    const SAMPLE_STEP = 2;   // the body is drawn every 2 pixels along its path
+
+    // ---- Settings (easy to tweak!) ----
+    const SPECIAL_EVERY = 4;       // a special fruit appears after every 4 normal fruits
+    const POINTS_PER_LEVEL = 10;   // level up every 10 points
+    const GROWTH_PER_FRUIT = 1;    // every fruit grows the snake by the same amount
+    const COINS_PER_POINT = 1;     // 1 point = 1 coin
+    const POINTS = { blackberry: 1, strawberry: 2, orange: 3 };
+
+    // Continue? costs: 1st defeat = 200 coins, 2nd = 300, 3rd = 500. After that: no more continues.
+    const CONTINUE_COSTS = [200, 300, 500];
+
+    // How slowly the tail moves while the snake is growing (0.35 = the tail loses 35% of its speed).
+    const GROW_SPEED = 0.35;
+
+    const SLOW_FACTOR = 1.7;       // Slow Motion: every step takes 1.7x longer
+    const MAGNET_RANGE = 6;        // Fruit Magnet: fruits within 6 cells are pulled in
+
+    const ranks = ["Baby Snake", "Garden Snake", "Hunter", "Viper", "Python", "Cobra", "Dragon", "Legend"];
+    const MAX_LEVEL = ranks.length;      // at this level every snake turns rainbow
+    const RAINBOW_AT = MAX_LEVEL - 0.4;  // (a little earlier, so the color change feels smooth)
+
+    // ---- Skins in the shop ----
+    // palette = the snake's color (hue, 0-360) at levels 1, 2, 3 ... 7. At level 8 it becomes a rainbow.
+    // Hue guide: 0 red, 30 orange, 60 yellow, 130 green, 190 cyan, 210 blue, 275 purple, 325 pink
+    const skins = [
+      { id: "green",  name: "Classic Green",  price: 0,   palette: [130, 150, 170, 190, 210, 240, 270] },
+      { id: "blue",   name: "Ocean Blue",     price: 100, palette: [210, 225, 240, 255, 270, 285, 300] },
+      { id: "red",    name: "Ruby Red",       price: 100, palette: [0, 10, 20, 30, 42, 54, 66] },
+      { id: "orange", name: "Sunset Orange",  price: 200, palette: [28, 40, 52, 64, 76, 90, 105] },
+      { id: "pink",   name: "Bubblegum Pink", price: 200, palette: [325, 310, 295, 280, 265, 250, 235] },
+      { id: "purple", name: "Royal Purple",   price: 500, palette: [275, 290, 305, 320, 335, 345, 355] }
+    ];
+
+    // ---- Skills: you buy them with coins, each purchase = one use. Press 1-6 in the game. ----
+    // duration = how long the effect lasts (milliseconds of play time)
+    const skills = [
+      { id: "ghost",  name: "Ghost Mode",   price: 60, duration: 5000,
+        desc: "Your snake turns into a ghost for 5 seconds. It can pass through its own body without crashing." },
+      { id: "slow",   name: "Slow Motion",  price: 40, duration: 6000,
+        desc: "Slows the snake down for 6 seconds, so tight spots are easier to handle." },
+      { id: "double", name: "Double Coins", price: 80, duration: 15000,
+        desc: "Every fruit gives you twice the coins for 15 seconds. Your score stays the same." },
+      { id: "magnet", name: "Fruit Magnet", price: 50, duration: 8000,
+        desc: "For 8 seconds, fruits that are close to your head slide toward it." },
+      { id: "lucky",  name: "Lucky Fruits", price: 50, duration: 15000,
+        desc: "For 15 seconds, a special fruit shows up after every normal fruit. One appears right away." },
+      { id: "shield", name: "Shield",       price: 150, duration: 60000,
+        desc: "A protective shield for 1 minute. If your snake hits itself, it survives and keeps going." }
+    ];
+
+    // ---- Saved data ----
+    let best = Number(localStorage.getItem("snakeBest")) || 0;
+    let coins = Number(localStorage.getItem("snakeCoins")) || 0;
+    let ownedSkins = ["green"];
+    try {
+      ownedSkins = JSON.parse(localStorage.getItem("snakeOwned")) || ["green"];
+    } catch (e) {}
+    let equippedSkin = localStorage.getItem("snakeSkin") || "green";
+    if (!ownedSkins.includes(equippedSkin)) equippedSkin = "green";
+
+    // How many uses of each skill you own
+    let skillCounts = {};
+    try {
+      skillCounts = JSON.parse(localStorage.getItem("snakeSkills")) || {};
+    } catch (e) {}
+    for (const sk of skills) {
+      if (typeof skillCounts[sk.id] !== "number") skillCounts[sk.id] = 0;
+    }
+
+    // ---- Stats and achievements ----
+    let stats = { totalScore: 0, fruits: 0, special: 0, bestRun: 0, bestSurvive: 0, bestLevel: 1, continues: 0, skillsUsed: {} };
+    try {
+      const savedStats = JSON.parse(localStorage.getItem("snakeStats"));
+      if (savedStats) stats = Object.assign(stats, savedStats);
+    } catch (e) {}
+    if (!stats.skillsUsed) stats.skillsUsed = {};
+
+    let achDone = {};      // achievements you have earned
+    let achClaimed = {};   // achievements whose coin reward you have taken
+    try { achDone = JSON.parse(localStorage.getItem("snakeAchDone")) || {}; } catch (e) {}
+    try { achClaimed = JSON.parse(localStorage.getItem("snakeAchClaimed")) || {}; } catch (e) {}
+
+    // goal = what you need to reach, reward = coins you get when you claim it.
+    // value() says how far along you are. unit is only for the text in the panel.
+    const ACH = [
+      { id: "firstbite", name: "First Bite",      desc: "Eat your first fruit.",                       goal: 1,    reward: 5,   value: () => stats.fruits },
+      { id: "score100",  name: "Snack Time",      desc: "Collect 100 points in total.",                goal: 100,  reward: 10,  value: () => stats.totalScore },
+      { id: "score500",  name: "Hungry Snake",    desc: "Collect 500 points in total.",                goal: 500,  reward: 50,  value: () => stats.totalScore },
+      { id: "score1000", name: "Fruit Feast",     desc: "Collect 1000 points in total.",               goal: 1000, reward: 100, value: () => stats.totalScore },
+      { id: "run50",     name: "Strong Run",      desc: "Score 50 points in a single game.",           goal: 50,   reward: 25,  value: () => stats.bestRun },
+      { id: "live60",    name: "Staying Alive",   desc: "Play for 1 minute without crashing.",         goal: 60,   reward: 10,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live120",   name: "Steady Slither",  desc: "Play for 2 minutes without crashing.",        goal: 120,  reward: 20,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live300",   name: "Unstoppable",     desc: "Play for 5 minutes without crashing.",        goal: 300,  reward: 60,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "level5",    name: "Growing Up",      desc: "Reach level 5.",                              goal: 5,    reward: 15,  value: () => stats.bestLevel },
+      { id: "level8",    name: "Rainbow Legend",  desc: "Reach level 8 and turn rainbow.",             goal: 8,    reward: 40,  value: () => stats.bestLevel },
+      { id: "special10", name: "Golden Taste",    desc: "Eat 10 special fruits.",                      goal: 10,   reward: 20,  value: () => stats.special },
+      { id: "skills",    name: "Skill Master",    desc: "Use each of the 6 skills at least once.",     goal: 6,    reward: 30,  value: () => Object.keys(stats.skillsUsed).length },
+      { id: "fashion",   name: "Fashion Snake",   desc: "Buy a new skin.",                             goal: 1,    reward: 15,  value: () => ownedSkins.length - 1 },
+      { id: "comeback",  name: "Second Chance",   desc: "Use Continue once.",                          goal: 1,    reward: 10,  value: () => stats.continues }
+    ];
+
+    // Saving to localStorage can make the game stutter, so we only save at calm moments:
+    // when the game ends, when you go back to the menu, when you buy something, or when you leave the page.
+    function saveAll() {
+      try {
+        localStorage.setItem("snakeBest", best);
+        localStorage.setItem("snakeCoins", coins);
+        localStorage.setItem("snakeOwned", JSON.stringify(ownedSkins));
+        localStorage.setItem("snakeSkin", equippedSkin);
+        localStorage.setItem("snakeSkills", JSON.stringify(skillCounts));
+        localStorage.setItem("snakeStats", JSON.stringify(stats));
+        localStorage.setItem("snakeAchDone", JSON.stringify(achDone));
+        localStorage.setItem("snakeAchClaimed", JSON.stringify(achClaimed));
+      } catch (e) {}
+    }
+    window.addEventListener("pagehide", saveAll);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) saveAll();
+    });
+
+    // ---- Game state ----
+    let screen = "menu";   // "menu" or "game"
+    let snake, dx, dy, nextDx, nextDy;
+    let dirQueue = [];   // turns you pressed that are waiting for the next step (so quick key presses are never lost)
+    let food, specialFood;
+    let score, level, eatenCount, growQueue, runCoins, continuesUsed;
+    let resumed = false;  // true right after a Continue
+    let shownLevel = 1;   // slides smoothly toward the real level (for color changes)
+    let visLen = 0;       // how long the snake looks right now (in pixels)
+    let state;            // "ready", "playing", "continue" or "over"
+    let lastTick = 0;
+    let lastFrame = 0;
+    let prevDelay = 0;
+    let surviveMs = 0;    // how long you have played since the last crash
+    let achTimer = 0;
+    let shieldFlashUntil = 0;
+    let levelUpUntil = 0;
+    let msgTimers = {};
+    let lastLabel = "";
+
+    // Time left (ms) of every active skill
+    let skillLeft = {};
+    for (const sk of skills) skillLeft[sk.id] = 0;
+
+    // Panels
+    let skinsOpen = false;
+    let skillsOpen = false;
+    let achOpen = false;
+    let skinPreviews = [];
+    let skillPreviews = [];
+    let skillSlots = [];
+    let infoOpen = {};
+
+    // ---- Colors ----
+    function getSkin() {
+      return skins.find(s => s.id === equippedSkin);
+    }
+
+    // Blends between the palette colors, so changes are smooth
+    function paletteHue(skin, lv) {
+      const p = skin.palette;
+      const f = Math.max(0, Math.min(p.length - 1, lv - 1));
+      const i = Math.floor(f);
+      const t = f - i;
+      const a = p[i];
+      const b = p[Math.min(i + 1, p.length - 1)];
+      return a + (b - a) * t;
+    }
+
+    function lookFor(skin, lv) {
+      if (lv >= RAINBOW_AT) return { rainbow: true };
+      return { hue: paletteHue(skin, lv) };
+    }
+
+    function getRank() {
+      return ranks[Math.min(level - 1, ranks.length - 1)];
+    }
+
+    function getTickDelay() {
+      const base = Math.max(60, 160 - (level - 1) * 12);
+      return skillLeft.slow > 0 ? base * SLOW_FACTOR : base;
+    }
+
+    // A rounded rectangle path
+    function rrect(g, x, y, w, h, r) {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    // ---- Screens ----
+    function showScreen(name) {
+      screen = name;
+      document.getElementById("menuScreen").classList.toggle("hidden", name !== "menu");
+      document.getElementById("gameScreen").classList.toggle("hidden", name !== "game");
+    }
+
+    function startGame() {
+      setSkinsOpen(false);
+      setSkillsOpen(false);
+      setAchOpen(false);
+      showScreen("game");
+      resetGame();
+    }
+
+    function goMenu() {
+      saveAll();
+      showScreen("menu");
+      updateMenu();
+    }
+
+    // ---- State + buttons under the game ----
+    function setState(s) {
+      state = s;
+      syncButtons();
+    }
+
+    function syncButtons() {
+      const cBtn = document.getElementById("continueBtn");
+      const rBtn = document.getElementById("restartBtn");
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        cBtn.style.display = "inline-block";
+        cBtn.textContent = "Continue (" + cost + " coins)";
+        cBtn.disabled = coins < cost;
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Give up";
+      } else if (state === "over") {
+        cBtn.style.display = "none";
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Play again";
+      } else {
+        cBtn.style.display = "none";
+        rBtn.style.display = "none";
+      }
+    }
+
+    // ---- Fruits ----
+    // x, y = the cell the fruit is in. vx, vy = where it is drawn (slides smoothly when the magnet pulls it)
+    function makeFruit(type) {
+      const cell = randomFreeCell();
+      return { x: cell.x, y: cell.y, vx: cell.x, vy: cell.y, type: type };
+    }
+
+    function spawnSpecial() {
+      specialFood = makeFruit(Math.random() < 0.5 ? "strawberry" : "orange");
+    }
+
+    function smoothFruit(f) {
+      if (!f) return;
+      let ddx = wrapDiff(f.x, f.vx);
+      let ddy = wrapDiff(f.y, f.vy);
+      f.vx += ddx * 0.35;
+      f.vy += ddy * 0.35;
+      if (f.vx < 0) f.vx += tileCount;
+      if (f.vx >= tileCount) f.vx -= tileCount;
+      if (f.vy < 0) f.vy += tileCount;
+      if (f.vy >= tileCount) f.vy -= tileCount;
+    }
+
+    // ---- Game setup ----
+    function resetGame() {
+      snake = [{ x: 9, y: 9 }, { x: 8, y: 9 }, { x: 7, y: 9 }];
+      dx = 1; dy = 0;
+      nextDx = 1; nextDy = 0;
+      dirQueue = [];
+      score = 0;
+      level = 1;
+      shownLevel = 1;
+      eatenCount = 0;
+      growQueue = 0;
+      runCoins = 0;
+      continuesUsed = 0;
+      surviveMs = 0;
+      resumed = false;
+      for (const sk of skills) skillLeft[sk.id] = 0;
+      visLen = (snake.length - 1) * gridSize;
+      specialFood = null;
+      food = null;
+      food = makeFruit("blackberry");
+      setState("ready");
+      updateHud();
+    }
+
+    function updateHud() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("level").textContent = level;
+      document.getElementById("rank").textContent = getRank();
+      document.getElementById("best").textContent = best;
+      document.getElementById("coins").textContent = coins;
+    }
+
+    function updateMenu() {
+      document.getElementById("menuCoins").textContent = coins;
+      document.getElementById("menuBest").textContent = best;
+      document.getElementById("skinsCoins").textContent = coins;
+      document.getElementById("skillsCoins").textContent = coins;
+      renderShop();
+      renderSkillShop();
+      renderAchievements();
+    }
+
+    function isOccupied(cell) {
+      if (snake.some(p => p.x === cell.x && p.y === cell.y)) return true;
+      if (food && food.x === cell.x && food.y === cell.y) return true;
+      if (specialFood && specialFood.x === cell.x && specialFood.y === cell.y) return true;
+      return false;
+    }
+
+    function randomFreeCell() {
+      let cell;
+      do {
+        cell = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } while (isOccupied(cell));
+      return cell;
+    }
+
+    function addScore(points) {
+      score += points;
+      const gain = points * COINS_PER_POINT * (skillLeft.double > 0 ? 2 : 1);
+      coins += gain;
+      runCoins += gain;
+
+      const newLevel = 1 + Math.floor(score / POINTS_PER_LEVEL);
+      if (newLevel > level) {
+        level = newLevel;
+        levelUpUntil = performance.now() + 1800;
+      }
+      if (score > best) best = score;
+
+      stats.totalScore += points;
+      if (score > stats.bestRun) stats.bestRun = score;
+      if (level > stats.bestLevel) stats.bestLevel = level;
+      checkAchievements();
+
+      updateHud();
+    }
+
+    // ---- Skills in the game ----
+    function useSkill(i) {
+      if (screen !== "game" || state !== "playing") return;
+      const sk = skills[i];
+      if (!sk) return;
+      if (skillCounts[sk.id] <= 0) return;   // you don't own it
+      if (skillLeft[sk.id] > 0) return;      // it is already running
+      skillCounts[sk.id]--;
+      skillLeft[sk.id] = sk.duration;
+      stats.skillsUsed[sk.id] = true;
+      checkAchievements();
+      if (sk.id === "lucky" && !specialFood) spawnSpecial();
+    }
+
+    // Fruit Magnet: fruits near the head move one cell toward it
+    function magnetPull(head) {
+      for (const f of [food, specialFood]) {
+        if (!f) continue;
+        if (Math.abs(wrapDiff(head.x, f.x)) + Math.abs(wrapDiff(head.y, f.y)) > MAGNET_RANGE) continue;
+        // The fruit moves 2 cells per step, so it can catch up with a snake that is moving away
+        for (let step = 0; step < 2; step++) {
+          const ddx = wrapDiff(head.x, f.x);
+          const ddy = wrapDiff(head.y, f.y);
+          if (Math.abs(ddx) >= Math.abs(ddy) && ddx !== 0) {
+            f.x = (f.x + Math.sign(ddx) + tileCount) % tileCount;
+          } else if (ddy !== 0) {
+            f.y = (f.y + Math.sign(ddy) + tileCount) % tileCount;
+          }
+        }
+      }
+    }
+
+    // Did the head reach a fruit?
+    function checkEat(head) {
+      if (head.x === food.x && head.y === food.y) {
+        stats.fruits++;
+        addScore(POINTS[food.type]);
+        eatenCount++;
+        growQueue += GROWTH_PER_FRUIT;
+        food = makeFruit("blackberry");
+        if (!specialFood && (skillLeft.lucky > 0 || eatenCount % SPECIAL_EVERY === 0)) {
+          spawnSpecial();
+        }
+      }
+      if (specialFood && head.x === specialFood.x && head.y === specialFood.y) {
+        stats.fruits++;
+        stats.special++;
+        addScore(POINTS[specialFood.type]);
+        specialFood = null;
+        growQueue += GROWTH_PER_FRUIT;
+      }
+    }
+
+    // ---- Achievements ----
+    function unclaimedCount() {
+      return ACH.filter(a => achDone[a.id] && !achClaimed[a.id]).length;
+    }
+
+    // The little red circle on the Achievements panel: how many rewards are waiting for you
+    function updateBadge() {
+      const n = unclaimedCount();
+      const el = document.getElementById("achBadge");
+      el.textContent = n;
+      el.classList.toggle("hidden", n === 0);
+    }
+
+    // A small message in the corner, one at a time, that fades away by itself
+    let toastQueue = [];
+    let toastBusy = false;
+
+    function showToast(text) {
+      toastQueue.push(text);
+      if (!toastBusy) nextToast();
+    }
+
+    function nextToast() {
+      const el = document.getElementById("toast");
+      if (!toastQueue.length) {
+        toastBusy = false;
+        return;
+      }
+      toastBusy = true;
+      el.textContent = toastQueue.shift();
+      el.classList.add("show");
+      setTimeout(function () {
+        el.classList.remove("show");
+        setTimeout(nextToast, 400);
+      }, 3200);
+    }
+
+    function checkAchievements() {
+      let changed = false;
+      for (const a of ACH) {
+        if (!achDone[a.id] && a.value() >= a.goal) {
+          achDone[a.id] = true;
+          changed = true;
+          showToast("Achievement: " + a.name + " (+" + a.reward + " coins to claim)");
+        }
+      }
+      if (changed) updateBadge();
+    }
+
+    function claimAch(a) {
+      if (!achDone[a.id] || achClaimed[a.id]) return;
+      achClaimed[a.id] = true;
+      coins += a.reward;
+      showMsg("achMsg", "+" + a.reward + " coins! (" + a.name + ")");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function claimAllAch() {
+      let total = 0;
+      for (const a of ACH) {
+        if (achDone[a.id] && !achClaimed[a.id]) {
+          achClaimed[a.id] = true;
+          coins += a.reward;
+          total += a.reward;
+        }
+      }
+      if (total > 0) showMsg("achMsg", "+" + total + " coins!");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderAchievements() {
+      const list = document.getElementById("achList");
+      list.innerHTML = "";
+
+      const doneCount = ACH.filter(a => achDone[a.id]).length;
+      document.getElementById("achSummary").textContent = "Earned " + doneCount + " of " + ACH.length;
+      document.getElementById("achCoins").textContent = coins;
+
+      const waiting = unclaimedCount();
+      const allBtn = document.getElementById("claimAll");
+      allBtn.classList.toggle("hidden", waiting < 2);
+      allBtn.textContent = "Claim all (" + waiting + ")";
+
+      // Rewards to claim first, then the ones still to earn, then the ones already claimed
+      const rank = a => (achDone[a.id] && !achClaimed[a.id]) ? 0 : (achClaimed[a.id] ? 2 : 1);
+      const sorted = ACH.map((a, i) => ({ a: a, i: i }))
+                        .sort((p, q) => rank(p.a) - rank(q.a) || p.i - q.i)
+                        .map(p => p.a);
+
+      for (const a of sorted) {
+        const done = !!achDone[a.id];
+        const claimed = !!achClaimed[a.id];
+        const unit = a.unit || "";
+        const shown = done ? a.goal : Math.min(a.value(), a.goal);
+
+        const row = document.createElement("div");
+        row.className = "achRow" + (done && !claimed ? " ready" : "") + (claimed ? " claimed" : "");
+
+        const icon = document.createElement("div");
+        icon.className = "achIcon";
+        icon.textContent = done ? "★" : "☆";
+
+        const mid = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = a.name;
+        const desc = document.createElement("small");
+        desc.textContent = a.desc;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("div");
+        fill.style.width = Math.round(100 * shown / a.goal) + "%";
+        bar.appendChild(fill);
+        const prog = document.createElement("small");
+        prog.textContent = shown + " / " + a.goal + unit + "  -  Reward: " + a.reward + " coins";
+        mid.appendChild(name);
+        mid.appendChild(desc);
+        mid.appendChild(bar);
+        mid.appendChild(prog);
+
+        row.appendChild(icon);
+        row.appendChild(mid);
+
+        if (done && !claimed) {
+          const btn = document.createElement("button");
+          btn.className = "claimBtn";
+          btn.textContent = "Claim +" + a.reward;
+          btn.addEventListener("click", function () { claimAch(a); });
+          row.appendChild(btn);
+        } else {
+          const st = document.createElement("div");
+          st.className = "achStatus";
+          st.textContent = claimed ? "Claimed" : "";
+          row.appendChild(st);
+        }
+
+        list.appendChild(row);
+      }
+
+      updateBadge();
+    }
+
+    function setAchOpen(v) {
+      achOpen = v;
+      document.getElementById("achBody").classList.toggle("hidden", !v);
+      document.getElementById("achArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderAchievements();
+    }
+
+    // ---- Crash and Continue? ----
+    function onCrash() {
+      saveAll();
+      if (continuesUsed < CONTINUE_COSTS.length) setState("continue");
+      else setState("over");
+    }
+
+    // Is the cell next to the head (in direction ddx, ddy) free to enter?
+    function isFreeAhead(ddx, ddy) {
+      const cell = {
+        x: (snake[0].x + ddx + tileCount) % tileCount,
+        y: (snake[0].y + ddy + tileCount) % tileCount
+      };
+      const solidCount = growQueue > 0 ? snake.length : snake.length - 1;   // the tail moves away
+      for (let i = 0; i < solidCount; i++) {
+        if (snake[i].x === cell.x && snake[i].y === cell.y) return false;
+      }
+      return true;
+    }
+
+    function doContinue() {
+      if (state !== "continue") return;
+      const cost = CONTINUE_COSTS[continuesUsed];
+      if (cost === undefined || coins < cost) return;
+
+      coins -= cost;
+      continuesUsed++;
+      stats.continues++;
+      surviveMs = 0;
+      checkAchievements();
+      growQueue = 0;
+      saveAll();
+
+      // Find a safe direction: straight on, or a turn to the left or right
+      const dirs = [[dx, dy], [dy, dx], [-dy, -dx]];
+      let chosen = null;
+      while (!chosen) {
+        for (const d of dirs) {
+          if (isFreeAhead(d[0], d[1])) { chosen = d; break; }
+        }
+        if (!chosen) {
+          // Trapped: cut a piece off the tail until there is room
+          if (snake.length > 3) snake.pop();
+          else chosen = dirs[1];
+        }
+      }
+      dx = chosen[0]; dy = chosen[1];
+      nextDx = dx; nextDy = dy;
+      dirQueue = [];
+      visLen = (snake.length - 1) * gridSize;
+      resumed = true;
+      setState("ready");
+      updateHud();
+    }
+
+    function giveUp() {
+      if (state !== "continue") return;
+      setState("over");
+    }
+
+    // ---- Panels on the menu screen ----
+    function showMsg(id, text) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      clearTimeout(msgTimers[id]);
+      msgTimers[id] = setTimeout(function () { el.textContent = ""; }, 2500);
+    }
+
+    function setSkinsOpen(v) {
+      skinsOpen = v;
+      document.getElementById("skinsBody").classList.toggle("hidden", !v);
+      document.getElementById("skinsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderShop();
+    }
+
+    function setSkillsOpen(v) {
+      skillsOpen = v;
+      document.getElementById("skillsBody").classList.toggle("hidden", !v);
+      document.getElementById("skillsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderSkillShop();
+    }
+
+    function onSkinClick(skin) {
+      if (ownedSkins.includes(skin.id)) {
+        equippedSkin = skin.id;
+        showMsg("skinMsg", skin.name + " equipped!");
+      } else if (coins >= skin.price) {
+        coins -= skin.price;
+        ownedSkins.push(skin.id);
+        checkAchievements();
+        equippedSkin = skin.id;
+        showMsg("skinMsg", "You bought " + skin.name + "!");
+      } else {
+        showMsg("skinMsg", "Not enough coins. You need " + (skin.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function onBuySkill(sk) {
+      if (coins >= sk.price) {
+        coins -= sk.price;
+        skillCounts[sk.id]++;
+        showMsg("skillMsg", "You bought " + sk.name + "! You own " + skillCounts[sk.id] + ".");
+      } else {
+        showMsg("skillMsg", "Not enough coins. You need " + (sk.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderShop() {
+      const shop = document.getElementById("shop");
+      shop.innerHTML = "";
+      skinPreviews = [];
+
+      skins.forEach(function (skin, idx) {
+        const owned = ownedSkins.includes(skin.id);
+        const equipped = equippedSkin === skin.id;
+
+        const card = document.createElement("button");
+        card.className = "card" + (equipped ? " equipped" : "") +
+                         (!owned && coins < skin.price ? " cant" : "");
+
+        const cv = document.createElement("canvas");
+        cv.className = "preview";
+        cv.width = 180;
+        cv.height = 46;
+
+        const name = document.createElement("div");
+        name.textContent = skin.name;
+        name.style.fontWeight = "bold";
+
+        const status = document.createElement("small");
+        if (equipped) status.textContent = "Equipped";
+        else if (owned) status.textContent = "Click to equip";
+        else if (skin.price === 0) status.textContent = "Free";
+        else status.textContent = skin.price + " coins";
+
+        card.appendChild(cv);
+        card.appendChild(name);
+        card.appendChild(status);
+        card.addEventListener("click", function () { onSkinClick(skin); });
+        shop.appendChild(card);
+
+        skinPreviews.push({ skin: skin, idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function renderSkillShop() {
+      const list = document.getElementById("skillList");
+      list.innerHTML = "";
+      skillPreviews = [];
+
+      skills.forEach(function (sk, idx) {
+        const row = document.createElement("div");
+        row.className = "skillRow";
+
+        const cv = document.createElement("canvas");
+        cv.className = "skillPrev";
+        cv.width = 48;
+        cv.height = 48;
+
+        const info = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = sk.name;
+        const sub = document.createElement("small");
+        sub.textContent = "You own: " + skillCounts[sk.id] + "  -  Key " + (idx + 1);
+        info.appendChild(name);
+        info.appendChild(sub);
+
+        const buy = document.createElement("button");
+        buy.className = "buyBtn" + (coins < sk.price ? " cant" : "");
+        buy.textContent = "Buy " + sk.price;
+        buy.addEventListener("click", function () { onBuySkill(sk); });
+
+        const i = document.createElement("button");
+        i.className = "infoBtn";
+        i.textContent = "i";
+        i.title = "What does it do?";
+
+        const desc = document.createElement("div");
+        desc.className = "skillDesc" + (infoOpen[sk.id] ? "" : " hidden");
+        desc.textContent = sk.desc;
+
+        i.addEventListener("click", function () {
+          infoOpen[sk.id] = !infoOpen[sk.id];
+          desc.classList.toggle("hidden", !infoOpen[sk.id]);
+          i.blur();
+        });
+
+        row.appendChild(cv);
+        row.appendChild(info);
+        row.appendChild(buy);
+        row.appendChild(i);
+        row.appendChild(desc);
+        list.appendChild(row);
+
+        skillPreviews.push({ skill: sk, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    // The five skill slots above the game
+    function buildSkillBar() {
+      const bar = document.getElementById("skillBar");
+      bar.innerHTML = "";
+      skillSlots = [];
+      skills.forEach(function (sk, idx) {
+        const cv = document.createElement("canvas");
+        cv.className = "skillIcon";
+        cv.width = 64;
+        cv.height = 64;
+        cv.title = sk.name + " (key " + (idx + 1) + ")";
+        cv.addEventListener("click", function () { useSkill(idx); });
+        bar.appendChild(cv);
+        skillSlots.push({ idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    document.getElementById("legend").textContent =
+      "Blackberry " + POINTS.blackberry + " pt - Strawberry " + POINTS.strawberry +
+      " pts - Orange " + POINTS.orange + " pts. 1 point = " + COINS_PER_POINT + " coin.";
+    document.getElementById("skillsLegend").textContent =
+      "Each purchase gives you one use. In the game, press 1-6 (or tap the icon).";
+    document.getElementById("skillsLegend").style.cssText = "font-size:12px;color:#aab;margin-bottom:8px;";
+
+    document.getElementById("skinsHead").addEventListener("click", function () {
+      this.blur();
+      setSkinsOpen(!skinsOpen);
+    });
+    document.getElementById("skillsHead").addEventListener("click", function () {
+      this.blur();
+      setSkillsOpen(!skillsOpen);
+    });
+    document.getElementById("achHead").addEventListener("click", function () {
+      this.blur();
+      setAchOpen(!achOpen);
+    });
+    document.getElementById("claimAll").addEventListener("click", claimAllAch);
+    document.getElementById("startBtn").addEventListener("click", function () {
+      this.blur();
+      startGame();
+    });
+    document.getElementById("twoBtn").addEventListener("click", function () {
+      saveAll();
+      window.location.href = "snake2.html";
+    });
+    document.getElementById("menuBtn").addEventListener("click", function () {
+      this.blur();
+      goMenu();
+    });
+    document.getElementById("continueBtn").addEventListener("click", function () {
+      this.blur();
+      doContinue();
+    });
+    document.getElementById("restartBtn").addEventListener("click", function () {
+      this.blur();
+      if (state === "continue") giveUp();
+      else if (state === "over") resetGame();
+    });
+
+    // ---- Keyboard ----
+    document.addEventListener("keydown", function (event) {
+      if (screen === "menu") {
+        if (event.key === "Escape" && (skinsOpen || skillsOpen || achOpen)) {
+          setSkinsOpen(false);
+          setSkillsOpen(false);
+          setAchOpen(false);
+          return;
+        }
+        const onButton = document.activeElement instanceof HTMLButtonElement;
+        if (event.key === "Enter" && !onButton) startGame();
+        return;
+      }
+
+      const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "];
+      if (keys.includes(event.key)) event.preventDefault();
+
+      if (/^[1-6]$/.test(event.key)) {
+        useSkill(Number(event.key) - 1);
+        return;
+      }
+
+      if ((event.key === "m" || event.key === "M" || event.key === "Escape") && state !== "playing") {
+        goMenu();
+        return;
+      }
+
+      if (state === "continue") {
+        if (event.key === "c" || event.key === "C") doContinue();
+        if (event.key === " ") giveUp();
+        return;
+      }
+
+      if (state === "over") {
+        if (event.key === " ") resetGame();
+        return;
+      }
+
+      const vec = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+      if (!vec) return;
+
+      if (state === "ready") {
+        // The first key starts the game (a key that points backwards is ignored)
+        if (vec[0] === -dx && vec[1] === -dy) return;
+        // Right after a Continue, ignore a key that would crash the snake straight away
+        if (resumed && !isFreeAhead(vec[0], vec[1])) return;
+        dx = vec[0];
+        dy = vec[1];
+        nextDx = dx; nextDy = dy;
+        dirQueue = [];
+        resumed = false;
+        setState("playing");
+        lastTick = performance.now();
+        return;
+      }
+
+      if (state === "playing") {
+        // Compare with the last turn that is already waiting (so "up, then left" quickly works)
+        const last = dirQueue.length ? dirQueue[dirQueue.length - 1] : [dx, dy];
+        if (vec[0] === last[0] && vec[1] === last[1]) return;
+        if (vec[0] === -last[0] && vec[1] === -last[1]) return;
+        if (dirQueue.length < 2) dirQueue.push(vec);
+        // Make the turn happen sooner: if the next step is far away, bring it closer (max ~80 ms wait)
+        if (dirQueue.length === 1) {
+          const now = performance.now();
+          const delay = getTickDelay();
+          if (lastTick + delay - now > 80) lastTick = now - (delay - 80);
+        }
+      }
+    });
+
+    // ---- Game logic: the head arrives at a new cell ----
+    function tick() {
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      if (head.x >= tileCount) head.x = 0;
+      if (head.x < 0) head.x = tileCount - 1;
+      if (head.y >= tileCount) head.y = 0;
+      if (head.y < 0) head.y = tileCount - 1;
+
+      // Only the part of the body you can actually see is solid (the tail cell is safe to enter).
+      // In Ghost Mode nothing is solid.
+      if (skillLeft.ghost <= 0) {
+        const solidCount = Math.min(snake.length, Math.ceil(visLen / gridSize - 0.001));
+        let hit = false;
+        for (let i = 0; i < solidCount; i++) {
+          if (snake[i].x === head.x && snake[i].y === head.y) { hit = true; break; }
+        }
+        if (hit) {
+          if (skillLeft.shield > 0) {
+            shieldFlashUntil = performance.now() + 450;   // the shield protects us
+          } else {
+            onCrash();
+            return;
+          }
+        }
+      }
+
+      snake.unshift(head);
+
+      checkEat(head);
+      if (skillLeft.magnet > 0) {
+        magnetPull(head);
+        checkEat(head);
+      }
+
+      if (growQueue > 0) {
+        growQueue--;       // keep the tail: the snake gets longer
+      } else {
+        snake.pop();       // remove the tail: the snake just moves
+      }
+
+      // From now on the head moves in the direction the player chose
+      if (dirQueue.length) {
+        const d = dirQueue.shift();
+        dx = d[0];
+        dy = d[1];
+      }
+    }
+
+    // ---- Smooth movement helpers ----
+    // Shortest signed distance from b to a, even across the wrapped edge
+    function wrapDiff(a, b) {
+      let d = a - b;
+      if (d > tileCount / 2) d -= tileCount;
+      if (d < -tileCount / 2) d += tileCount;
+      return d;
+    }
+
+    // Builds the snake's body as a path of points (in pixels), from tail to head.
+    // The path starts at the tip of the head and is cut off after visLen pixels,
+    // so the tail's position never jumps, even when the snake grows.
+    function buildPath(progress) {
+      const head = snake[0];
+      const cells = [{ x: head.x + dx * progress, y: head.y + dy * progress }];
+
+      let cur = { x: head.x, y: head.y };
+      cells.push(cur);
+      for (let i = 1; i < snake.length; i++) {
+        cur = {
+          x: cur.x + wrapDiff(snake[i].x, snake[i - 1].x),
+          y: cur.y + wrapDiff(snake[i].y, snake[i - 1].y)
+        };
+        cells.push(cur);
+      }
+
+      const px = cells.map(function (p) {
+        return { x: p.x * gridSize + gridSize / 2, y: p.y * gridSize + gridSize / 2 };
+      });
+
+      const result = [px[0]];
+      let remaining = visLen;
+      for (let i = 1; i < px.length; i++) {
+        const a = px[i - 1];
+        const b = px[i];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        if (len >= remaining) {
+          const t = len === 0 ? 0 : remaining / len;
+          result.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+          break;
+        }
+        result.push(b);
+        remaining -= len;
+      }
+
+      return result.reverse();
+    }
+
+    // Walks along the path (tail first) and drops a sample point every few pixels.
+    // d = distance of the sample from the tip of the tail. Works for straight and curvy paths.
+    function samplePath(pts, step) {
+      const samples = [];
+      let d = 0;
+      let segStart = 0;
+      let lux = 1, luy = 0;
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        if (len === 0) continue;
+        const ux = (b.x - a.x) / len;
+        const uy = (b.y - a.y) / len;
+        lux = ux; luy = uy;
+
+        while (d <= segStart + len) {
+          const t = d - segStart;
+          samples.push({ x: a.x + ux * t, y: a.y + uy * t, ux: ux, uy: uy, d: d });
+          d += step;
+        }
+        segStart += len;
+      }
+
+      const last = pts[pts.length - 1];
+      if (samples.length === 0 || samples[samples.length - 1].d < segStart - 0.01) {
+        samples.push({ x: last.x, y: last.y, ux: lux, uy: luy, d: segStart });
+      }
+      return { samples: samples, total: segStart };
+    }
+
+    // The body is thin at the tail tip and reaches full width after a short distance
+    function radiusAt(d, total) {
+      const taperLen = Math.min(gridSize * 2.5, total * 0.5);
+      const f = Math.min(1, d / taperLen);
+      return bodyRadius * (0.2 + 0.8 * Math.sin(f * Math.PI / 2));
+    }
+
+    // ---- Drawing: fruits ----
+    function drawLeaf(g, x, y) {
+      g.fillStyle = "#3ddc84";
+      g.beginPath();
+      g.ellipse(x, y, 5, 3, -0.5, 0, Math.PI * 2);
+      g.fill();
+    }
+
+    // g = which canvas to draw on, size = scale (1 = normal)
+    function drawFruitAt(g, type, cx, cy, size, time, special, phase) {
+      const bob = Math.sin(time / 200 + phase) * 2;
+      const pulse = 1 + Math.sin(time / 250) * 0.07;
+
+      g.save();
+      g.translate(cx, cy + bob);
+      g.scale(size * pulse, size * pulse);
+
+      if (special) {
+        g.shadowColor = "gold";
+        g.shadowBlur = 14 + Math.sin(time / 150) * 6;
+      }
+
+      if (type === "blackberry") {
+        g.fillStyle = "#9d4edd";
+        const spots = [[0, -4], [-4, 0], [4, 0], [-2, 4], [2, 4], [0, 0]];
+        for (const s of spots) {
+          g.beginPath();
+          g.arc(s[0], s[1], 4.5, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.6)";
+        g.beginPath();
+        g.arc(-2, -5, 1.5, 0, Math.PI * 2);
+        g.fill();
+        drawLeaf(g, 0, -9);
+      }
+
+      if (type === "strawberry") {
+        g.fillStyle = "#ff3b5c";
+        g.beginPath();
+        g.moveTo(-9, -5);
+        g.quadraticCurveTo(0, -12, 9, -5);
+        g.quadraticCurveTo(8, 6, 0, 11);
+        g.quadraticCurveTo(-8, 6, -9, -5);
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#ffe066";
+        for (const s of [[-4, -2], [3, -3], [0, 2], [-3, 5], [4, 3]]) {
+          g.fillRect(s[0], s[1], 1.6, 1.6);
+        }
+        drawLeaf(g, -3, -9);
+        drawLeaf(g, 3, -9);
+      }
+
+      if (type === "orange") {
+        g.fillStyle = "#ff9f1c";
+        g.beginPath();
+        g.arc(0, 1, 10, 0, Math.PI * 2);
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.35)";
+        g.beginPath();
+        g.arc(-4, -3, 3, 0, Math.PI * 2);
+        g.fill();
+        drawLeaf(g, 2, -9);
+      }
+
+      g.restore();
+    }
+
+    function drawGameFruit(f, time, special) {
+      drawFruitAt(ctx, f.type, f.vx * gridSize + gridSize / 2, f.vy * gridSize + gridSize / 2,
+                  gridSize / 24, time, special, f.x);
+    }
+
+    // ---- Drawing: skill icons (small animations) ----
+    // Draws the icon of a skill, centered at cx, cy. scale 1 = fits a 48x48 box.
+    function drawSkillIcon(g, id, time, cx, cy, scale) {
+      g.save();
+      g.translate(cx, cy);
+      g.scale(scale, scale);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+
+      if (id === "ghost") {
+        g.translate(0, Math.sin(time / 300) * 2);
+        g.shadowColor = "#8fd3ff";
+        g.shadowBlur = 8;
+        g.fillStyle = "#eaf2ff";
+        g.beginPath();
+        g.arc(0, -2, 13, Math.PI, 0);
+        g.lineTo(13, 14);
+        g.quadraticCurveTo(8.7, 8, 4.3, 14);
+        g.quadraticCurveTo(0, 8, -4.3, 14);
+        g.quadraticCurveTo(-8.7, 8, -13, 14);
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#1a1a2e";
+        g.beginPath(); g.ellipse(-5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(0, 3, 2.4, 3, 0, 0, Math.PI * 2); g.fill();
+      }
+
+      if (id === "slow") {
+        g.fillStyle = "#2d3a66";
+        g.strokeStyle = "#e8eefc";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 2;
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 2;
+          g.beginPath();
+          g.moveTo(Math.cos(a) * 10, Math.sin(a) * 10);
+          g.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+          g.stroke();
+        }
+        const ma = time / 1200 - Math.PI / 2;
+        const ha = time / 9000 - Math.PI / 2;
+        g.strokeStyle = "#8fd3ff";
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ma) * 10, Math.sin(ma) * 10);
+        g.stroke();
+        g.strokeStyle = "#ffffff";
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ha) * 6, Math.sin(ha) * 6);
+        g.stroke();
+      }
+
+      if (id === "double") {
+        const sx = Math.max(0.12, Math.abs(Math.cos(time / 450)));
+        g.scale(sx, 1);
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.arc(0, 0, 10, 0, Math.PI * 2);
+        g.stroke();
+        g.fillStyle = "#8a6100";
+        g.font = "bold 13px Arial";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText("x2", 0, 1);
+      }
+
+      if (id === "magnet") {
+        g.lineCap = "butt";
+        g.lineWidth = 8;
+        g.strokeStyle = "#e94560";
+        g.beginPath();
+        g.moveTo(-11, -9);
+        g.lineTo(-11, 2);
+        g.arc(0, 2, 11, Math.PI, 0, true);
+        g.lineTo(11, -9);
+        g.stroke();
+        g.fillStyle = "#dfe6f2";
+        g.fillRect(-15, -12, 8, 7);
+        g.fillRect(7, -12, 8, 7);
+
+        const starts = [[-24, -24], [0, -30], [24, -24]];
+        for (let k = 0; k < 3; k++) {
+          const t = ((time / 900) + k / 3) % 1;
+          const x = starts[k][0] * (1 - t);
+          const y = starts[k][1] + (-8 - starts[k][1]) * t;
+          g.globalAlpha = 1 - t * 0.8;
+          g.fillStyle = "#ffe066";
+          g.beginPath();
+          g.arc(x, y, 2.4, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.globalAlpha = 1;
+      }
+
+      if (id === "lucky") {
+        const pulse = 1 + Math.sin(time / 250) * 0.08;
+        g.rotate(Math.sin(time / 700) * 0.15);
+        g.scale(pulse, pulse);
+        g.shadowColor = "gold";
+        g.shadowBlur = 8;
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 2;
+        g.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? 14 : 6;
+          const a = -Math.PI / 2 + i * Math.PI / 5;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r;
+          if (i === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.stroke();
+
+        g.strokeStyle = "#ffffff";
+        g.lineWidth = 1.5;
+        g.globalAlpha = 0.5 + 0.5 * Math.sin(time / 200);
+        g.beginPath();
+        g.moveTo(15, -16); g.lineTo(15, -10);
+        g.moveTo(12, -13); g.lineTo(18, -13);
+        g.moveTo(-17, 8); g.lineTo(-17, 14);
+        g.moveTo(-20, 11); g.lineTo(-14, 11);
+        g.stroke();
+      }
+
+      if (id === "shield") {
+        const pulse = 1 + Math.sin(time / 300) * 0.04;
+        g.scale(pulse, pulse);
+        g.shadowColor = "#6cf"; g.shadowBlur = 8;
+        g.fillStyle = "#3a7bd5"; g.strokeStyle = "#e8f4ff"; g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, -15); g.quadraticCurveTo(10, -12, 14, -12);
+        g.quadraticCurveTo(14, 6, 0, 16); g.quadraticCurveTo(-14, 6, -14, -12);
+        g.quadraticCurveTo(-10, -12, 0, -15);
+        g.closePath(); g.fill(); g.shadowBlur = 0; g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = 3;
+        g.beginPath(); g.moveTo(-6, 0); g.lineTo(-1.5, 5); g.lineTo(7, -6); g.stroke();
+      }
+
+      g.restore();
+    }
+
+    function drawSkillSlot(e, time) {
+      const g = e.g;
+      const sk = skills[e.idx];
+      const count = skillCounts[sk.id];
+      const left = skillLeft[sk.id];
+      const active = left > 0;
+
+      g.clearRect(0, 0, 64, 64);
+      g.fillStyle = "#1f2a4d";
+      rrect(g, 1.5, 1.5, 61, 61, 10);
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = active ? "gold" : "#2d3a66";
+      g.stroke();
+
+      g.save();
+      g.globalAlpha = (count > 0 || active) ? 1 : 0.35;
+      drawSkillIcon(g, sk.id, time, 32, 30, 1.25);
+      g.restore();
+
+      // key number (top left)
+      g.fillStyle = "#aab";
+      g.font = "bold 12px Arial";
+      g.textAlign = "left";
+      g.textBaseline = "top";
+      g.fillText(String(e.idx + 1), 7, 6);
+
+      // how many you own (bottom right)
+      g.font = "bold 17px Arial";
+      g.textAlign = "right";
+      g.textBaseline = "bottom";
+      g.lineJoin = "round";
+      g.lineWidth = 4;
+      g.strokeStyle = "#16213e";
+      g.strokeText(String(count), 58, 55);
+      g.fillStyle = count > 0 ? "gold" : "#8892b0";
+      g.fillText(String(count), 58, 55);
+
+      // time left
+      if (active) {
+        g.fillStyle = "gold";
+        g.fillRect(8, 58, 48 * left / sk.duration, 3);
+      }
+    }
+
+    // ---- Drawing: the snake ----
+    // The head, drawn in its own coordinates (x = forward, y = sideways)
+    function headPath(g, R, k) {
+      g.beginPath();
+      g.moveTo(R * 1.7 * k, 0);
+      g.quadraticCurveTo(R * 1.35 * k, R * 0.95 * k, R * 0.4 * k, R * 1.2 * k);
+      g.quadraticCurveTo(-R * 0.3 * k, R * 1.3 * k, -R * 0.75 * k, R * 0.8 * k);
+      g.lineTo(-R * 0.75 * k, -R * 0.8 * k);
+      g.quadraticCurveTo(-R * 0.3 * k, -R * 1.3 * k, R * 0.4 * k, -R * 1.2 * k);
+      g.quadraticCurveTo(R * 1.35 * k, -R * 0.95 * k, R * 1.7 * k, 0);
+      g.closePath();
+    }
+
+    // Draws one snake. dirx/diry = the direction the head is looking at
+    function drawSnakeAt(g, path, look, time, dirx, diry, showTongue) {
+      const S = path.samples;
+      const total = path.total;
+      const R = bodyRadius;
+      const dark = look.rainbow ? "rgb(28, 22, 52)" : "hsl(" + look.hue + ", 55%, 17%)";
+
+      // 1) Dark outline around the whole body
+      g.fillStyle = dark;
+      for (const s of S) {
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total) + 2.2, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 2) Body: lots of tiny circles in a row make a smooth, tapered band
+      if (!look.rainbow) g.fillStyle = "hsl(" + look.hue + ", 65%, 48%)";
+      for (const s of S) {
+        if (look.rainbow) {
+          g.fillStyle = "hsl(" + ((time / 10 + s.d * 0.8) % 360) + ", 80%, 55%)";
+        }
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total), 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 3) A lighter ridge along the back
+      g.fillStyle = look.rainbow ? "rgba(255, 255, 255, 0.25)" : "hsla(" + look.hue + ", 85%, 78%, 0.35)";
+      for (const s of S) {
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total) * 0.32, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 4) Scales: little "V" shapes pointing toward the head
+      g.lineWidth = 2.2;
+      g.lineJoin = "round";
+      g.lineCap = "round";
+      g.strokeStyle = look.rainbow ? "rgba(255, 255, 255, 0.55)" : "hsla(" + look.hue + ", 70%, 18%, 0.55)";
+      const period = gridSize * 0.62;
+      for (let dd = period; dd < total - gridSize * 0.55; dd += period) {
+        const s = S[Math.round(dd / SAMPLE_STEP)];
+        if (!s) continue;
+        const r = radiusAt(s.d, total);
+        const nx = -s.uy;
+        const ny = s.ux;
+        const bx = s.x - s.ux * r * 0.6;
+        const by = s.y - s.uy * r * 0.6;
+        g.beginPath();
+        g.moveTo(bx + nx * r * 0.7, by + ny * r * 0.7);
+        g.lineTo(s.x + s.ux * r * 0.35, s.y + s.uy * r * 0.35);
+        g.lineTo(bx - nx * r * 0.7, by - ny * r * 0.7);
+        g.stroke();
+      }
+
+      // 5) Head
+      const hc = S[S.length - 1];
+      g.save();
+      g.translate(hc.x, hc.y);
+      g.rotate(Math.atan2(diry, dirx));
+
+      // Tongue (drawn first, so it comes out from under the head)
+      if (showTongue) {
+        const phase = (time % 1000) / 1000;
+        if (phase < 0.35) {
+          const len = Math.sin((phase / 0.35) * Math.PI) * 13;
+          const sx = R * 1.55;
+          const ex = sx + 3 + len;
+          g.strokeStyle = "#ff4d6d";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(sx, 0);
+          g.lineTo(ex, 0);
+          g.moveTo(ex, 0);
+          g.lineTo(ex + 4, -3.5);
+          g.moveTo(ex, 0);
+          g.lineTo(ex + 4, 3.5);
+          g.stroke();
+        }
+      }
+
+      // Arrow-shaped head with a dark outline
+      g.fillStyle = look.rainbow
+        ? "hsl(" + ((time / 10) % 360) + ", 85%, 45%)"
+        : "hsl(" + look.hue + ", 62%, 38%)";
+      g.strokeStyle = dark;
+      g.lineWidth = 2.6;
+      headPath(g, R, 1);
+      g.fill();
+      g.stroke();
+
+      // Lighter plate on top of the head
+      g.fillStyle = look.rainbow ? "rgba(255, 255, 255, 0.25)" : "hsla(" + look.hue + ", 80%, 62%, 0.4)";
+      headPath(g, R, 0.62);
+      g.fill();
+
+      // Amber eyes with slit pupils, and two nostrils
+      for (const side of [-1, 1]) {
+        const ex = R * 0.5;
+        const ey = side * R * 0.68;
+        g.fillStyle = "#ffc933";
+        g.strokeStyle = dark;
+        g.lineWidth = 1.2;
+        g.beginPath();
+        g.ellipse(ex, ey, 4.4, 4.2, 0, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.fillStyle = "#111";
+        g.beginPath();
+        g.ellipse(ex, ey, 3.2, 1.2, 0, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "rgba(255, 255, 255, 0.85)";
+        g.beginPath();
+        g.arc(ex - 1.5, ey - 1.4, 0.9, 0, Math.PI * 2);
+        g.fill();
+
+        g.fillStyle = "rgba(0, 0, 0, 0.6)";
+        g.beginPath();
+        g.arc(R * 1.35, side * R * 0.2, 1.2, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      g.restore();
+    }
+
+    function drawSnake(time) {
+      const look = lookFor(getSkin(), shownLevel);
+
+      let progress = 0;
+      if (state === "playing") {
+        progress = Math.max(0, Math.min(1, (time - lastTick) / getTickDelay()));
+      } else if (state === "continue" || state === "over") {
+        progress = 1;
+      }
+
+      const pts = buildPath(progress);
+      const path = samplePath(pts, SAMPLE_STEP);
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const p of pts) {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+      }
+
+      // Ghost Mode: draw the snake on the extra canvas, then paste it see-through
+      const ghost = skillLeft.ghost > 0;
+      const g = ghost ? lctx : ctx;
+      if (ghost) lctx.clearRect(0, 0, layer.width, layer.height);
+
+      // When the snake crosses an edge it appears on the other side at the same time,
+      // so we draw shifted copies of it whenever they are visible.
+      const margin = 45;
+      const alive = state === "playing" || state === "ready";
+      for (const ox of [-canvas.width, 0, canvas.width]) {
+        for (const oy of [-canvas.height, 0, canvas.height]) {
+          if (maxX + ox < -margin || minX + ox > canvas.width + margin) continue;
+          if (maxY + oy < -margin || minY + oy > canvas.height + margin) continue;
+          g.save();
+          g.translate(ox, oy);
+          drawSnakeAt(g, path, look, time, dx, dy, alive);
+          if (skillLeft.shield > 0 && alive) drawShieldBubble(g, pts[pts.length - 1], time);
+          g.restore();
+        }
+      }
+
+      if (ghost) {
+        // It blinks when the effect is about to end
+        let alpha = 0.5;
+        if (skillLeft.ghost < 1500) alpha = 0.5 + 0.4 * (Math.floor(time / 120) % 2);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(layer, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    // Shield bubble around the head
+    function drawShieldBubble(g, p, time) {
+      const left = skillLeft.shield;
+      if (left < 3000 && Math.floor(time / 150) % 2 === 0) return;   // blinks when ending
+      const flash = performance.now() < shieldFlashUntil;
+      g.save();
+      g.translate(p.x, p.y);
+      const r = 27 + Math.sin(time / 250) * 1.5 + (flash ? 6 : 0);
+      g.fillStyle = flash ? "rgba(140,210,255,0.45)" : "rgba(100,180,255,0.16)";
+      g.strokeStyle = flash ? "rgba(255,255,255,0.95)" : "rgba(150,215,255,0.8)";
+      g.lineWidth = flash ? 4 : 2.5;
+      g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.restore();
+    }
+
+    // ---- Drawing: game screen ----
+    function drawOverlay(lines) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.font = "40px Arial";
+      ctx.fillText(lines[0], canvas.width / 2, canvas.height / 2 - 40);
+      ctx.font = "18px Arial";
+      for (let i = 1; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, canvas.height / 2 - 5 + (i - 1) * 28);
+      }
+    }
+
+    function draw(time) {
+      ctx.drawImage(gameBg, 0, 0);
+
+      drawGameFruit(food, time, false);
+      if (specialFood) drawGameFruit(specialFood, time, true);
+      drawSnake(time);
+
+      if (time < levelUpUntil) {
+        ctx.fillStyle = "gold";
+        ctx.textAlign = "center";
+        ctx.font = "28px Arial";
+        ctx.fillText("Level " + level + " - " + getRank() + "!", canvas.width / 2, 50);
+      }
+
+      if (state === "ready") {
+        if (resumed) {
+          drawOverlay(["Welcome back!", "Press an arrow key to keep going"]);
+        } else {
+          drawOverlay(["Snake", "Press an arrow key to start", "(1-6 = skills, M = menu)"]);
+        }
+      }
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        drawOverlay([
+          "Continue?",
+          "Score: " + score,
+          "Cost: " + cost + " coins (you have " + coins + ")",
+          coins >= cost ? "C = continue     Space = give up" : "Not enough coins     Space = give up"
+        ]);
+      }
+      if (state === "over") {
+        drawOverlay([
+          "Game Over",
+          "Score: " + score,
+          "Coins earned: +" + runCoins,
+          "Best: " + best,
+          "Space = play again",
+          "M = menu"
+        ]);
+      }
+    }
+
+    // ---- Drawing: menu screen ----
+    // A wavy path, from the tail (left) to the head (right)
+    function buildMenuPath(time) {
+      const pts = [];
+      const N = 40;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        pts.push({
+          x: 40 + 340 * t,
+          y: 100 + Math.sin(t * 7 - time / 450) * 38 * (0.35 + 0.65 * t)
+        });
+      }
+      return pts;
+    }
+
+    function drawMenu(time) {
+      mctx.drawImage(menuBg, 0, 0);
+
+      // The preview snake goes through all its levels, then turns rainbow
+      const lv = 1 + (time / 1500) % 8;
+      const skin = getSkin();
+      const look = lookFor(skin, lv);
+
+      const pts = buildMenuPath(time);
+      const path = samplePath(pts, SAMPLE_STEP);
+      const n = pts.length;
+      let ux = pts[n - 1].x - pts[n - 2].x;
+      let uy = pts[n - 1].y - pts[n - 2].y;
+      const len = Math.hypot(ux, uy);
+      ux /= len;
+      uy /= len;
+
+      drawSnakeAt(mctx, path, look, time, ux, uy, true);
+
+      drawFruitAt(mctx, "blackberry", 450, 100, 1.5, time, false, 1);
+      drawFruitAt(mctx, "strawberry", 500, 100, 1.5, time, false, 2);
+      drawFruitAt(mctx, "orange", 548, 100, 1.5, time, false, 3);
+
+      const label = skin.name + " - " + ranks[Math.min(Math.floor(lv), ranks.length) - 1];
+      if (label !== lastLabel) {
+        lastLabel = label;
+        document.getElementById("previewLabel").textContent = label;
+      }
+    }
+
+    // Small wavy snakes on the skin cards, each one shows the skin's colors changing level by level
+    function drawSkinPreview(e, time) {
+      const g = e.g;
+      const c = e.canvas;
+      g.fillStyle = "#16213e";
+      g.fillRect(0, 0, c.width, c.height);
+
+      const lv = 1 + ((time / 1500 + e.idx * 0.9) % 8);
+      const look = lookFor(e.skin, lv);
+
+      const S = 0.5;   // everything is drawn at half size
+      const w = c.width / S;
+      const h = c.height / S;
+      const pts = [];
+      const N = 30;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        pts.push({
+          x: 24 + (w - 90) * t,
+          y: h / 2 + Math.sin(t * 6 - time / 500) * 15 * (0.35 + 0.65 * t)
+        });
+      }
+      const path = samplePath(pts, SAMPLE_STEP);
+      const n = pts.length;
+      let ux = pts[n - 1].x - pts[n - 2].x;
+      let uy = pts[n - 1].y - pts[n - 2].y;
+      const len = Math.hypot(ux, uy);
+      ux /= len;
+      uy /= len;
+
+      g.save();
+      g.scale(S, S);
+      drawSnakeAt(g, path, look, time, ux, uy, false);
+      g.restore();
+    }
+
+    function drawSkillPreview(e, time) {
+      e.g.clearRect(0, 0, 48, 48);
+      e.g.fillStyle = "#16213e";
+      rrect(e.g, 0, 0, 48, 48, 8);
+      e.g.fill();
+      drawSkillIcon(e.g, e.skill.id, time, 24, 24, 0.95);
+    }
+
+    // ---- Main loop ----
+    function frame(time) {
+      if (screen === "menu") {
+        drawMenu(time);
+        if (skinsOpen) {
+          for (const e of skinPreviews) drawSkinPreview(e, time);
+        }
+        if (skillsOpen) {
+          for (const e of skillPreviews) drawSkillPreview(e, time);
+        }
+      } else {
+        const dt = Math.min(50, time - lastFrame);
+
+        // The snake's color slowly slides toward the color of its current level
+        shownLevel += (Math.min(level, MAX_LEVEL) - shownLevel) * 0.05;
+
+        // Skills run out while you play
+        if (state === "playing") {
+          surviveMs += dt;
+          if (surviveMs / 1000 > stats.bestSurvive) stats.bestSurvive = surviveMs / 1000;
+          achTimer += dt;
+          if (achTimer > 500) {
+            achTimer = 0;
+            checkAchievements();
+          }
+
+          for (const sk of skills) {
+            if (skillLeft[sk.id] > 0) skillLeft[sk.id] = Math.max(0, skillLeft[sk.id] - dt);
+          }
+        }
+
+        // When the snake grows, its visible length grows smoothly (no freezing tail)
+        const target = (snake.length - 1) * gridSize;
+        if (visLen < target) {
+          visLen = Math.min(target, visLen + GROW_SPEED * gridSize / getTickDelay() * dt);
+        } else if (visLen > target) {
+          visLen = target;
+        }
+
+        // If the speed changes (level up, Slow Motion), keep the head where it is
+        const delay = getTickDelay();
+        if (state === "playing" && prevDelay && delay !== prevDelay) {
+          const p = Math.max(0, Math.min(1, (time - lastTick) / prevDelay));
+          lastTick = time - p * delay;
+        }
+        prevDelay = delay;
+
+        if (state === "playing" && time - lastTick >= delay) {
+          lastTick += delay;                              // keep the rhythm steady
+          if (time - lastTick > delay) lastTick = time;   // fell far behind (hidden tab?): don't catch up
+          tick();
+        }
+
+        smoothFruit(food);
+        smoothFruit(specialFood);
+        draw(time);
+        for (const e of skillSlots) drawSkillSlot(e, time);
+      }
+      lastFrame = time;
+      requestAnimationFrame(frame);
+    }
+
+    buildSkillBar();
+    showScreen("menu");
+    updateMenu();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

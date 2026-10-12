@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake - 2 Players</title>
+  <style>
+    body { background: #1a1a2e; color: white; font-family: Arial, sans-serif; margin: 0; padding: 18px 10px 30px; min-height: 100vh; box-sizing: border-box; }
+    .hidden { display: none !important; }
+    .gold { color: gold; font-weight: bold; }
+    #backLink { position: fixed; top: 10px; left: 10px; z-index: 50; padding: 6px 12px; background: rgba(20,28,60,0.85); color: #cfe0ff;
+      border: 1px solid #3b4b85; border-radius: 16px; font: 600 13px Arial, sans-serif; text-decoration: none; }
+    #backLink:hover { background: #3b4b85; }
+
+    /* ---- Menu ---- */
+    #menuScreen { max-width: 760px; margin: 0 auto; text-align: center; }
+    h1 { margin: 26px 0 4px; font-size: 48px; letter-spacing: 8px; color: #e94560; }
+    h1 small { display: block; font-size: 20px; letter-spacing: 6px; color: #7fb6ff; margin-top: 2px; }
+    .sub { color: #aab; margin: 8px auto 20px; max-width: 600px; line-height: 1.5; font-size: 15px; }
+    .ctrls { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .ctrl { background: #16213e; border: 2px solid #2d3a66; border-radius: 12px; padding: 12px 16px; min-width: 250px; text-align: left; font-size: 14px; line-height: 1.7; }
+    .ctrl b { font-size: 17px; }
+    .ctrl.p1 { border-color: #3fae5a; }
+    .ctrl.p2 { border-color: #4d8fe0; }
+    kbd { display: inline-block; min-width: 20px; padding: 1px 6px; margin: 0 1px; text-align: center; background: #2a3563; border: 1px solid #44539a; border-bottom-width: 2px; border-radius: 5px; font: bold 13px Arial; }
+    .bigBtn { margin-top: 14px; padding: 14px 48px; font-size: 22px; font-weight: bold; color: white; background: #e94560; border: none; border-radius: 10px; cursor: pointer; }
+    .bigBtn:hover { background: #ff5c78; }
+    .smallNote { margin-top: 14px; font-size: 13px; color: #8892b0; }
+
+    /* ---- Game ---- */
+    #gameScreen { max-width: 1000px; margin: 0 auto; }
+    #topBar { display: flex; justify-content: center; align-items: baseline; gap: 26px; margin: 6px 0 10px; }
+    #levelLabel { font-size: 17px; color: #aab; }
+    #timer { font-size: 38px; font-weight: bold; min-width: 110px; text-align: center; }
+    #timer.low { color: #ff5c78; }
+    #boards { display: flex; gap: 14px; justify-content: center; align-items: flex-start; }
+    .side { flex: 1 1 0; max-width: 460px; min-width: 0; }
+    .sideHead { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; font-size: 15px; margin-bottom: 6px; gap: 6px; }
+    .sideHead b { font-size: 17px; }
+    .sideHead .hint { color: #8892b0; font-size: 12px; }
+    .sideHead span.v { color: #e94560; font-weight: bold; }
+    .skillBar { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
+    canvas.skillIcon { width: 52px; height: 52px; border: none; border-radius: 9px; background: transparent; cursor: pointer; }
+    .boardWrap { position: relative; }
+    canvas.board { display: block; width: 100%; height: auto; border: 3px solid #e94560; border-radius: 8px; background: #1b2a29; box-sizing: border-box; }
+    #side0 canvas.board { border-color: #3fae5a; }
+    #side1 canvas.board { border-color: #4d8fe0; }
+
+    /* the see-through shop between levels */
+    .shop { position: absolute; inset: 3px; border-radius: 6px; background: rgba(12,18,36,0.84); padding: 10px 12px; box-sizing: border-box; overflow-y: auto; }
+    .shop h3 { margin: 2px 0 2px; text-align: center; font-size: 18px; color: gold; }
+    .shop .sc { text-align: center; font-size: 14px; margin-bottom: 8px; color: #cdd6f4; }
+    .shopRow { display: grid; grid-template-columns: 38px 1fr auto; gap: 8px; align-items: center; padding: 4px 6px; margin-bottom: 4px; background: rgba(255,255,255,0.06); border-radius: 8px; font-size: 14px; }
+    .shopRow canvas { width: 38px; height: 38px; }
+    .shopRow small { display: block; color: #9aa4c8; font-size: 11px; }
+    .buy { padding: 6px 12px; font: inherit; font-size: 13px; font-weight: bold; color: white; background: #e94560; border: none; border-radius: 7px; cursor: pointer; }
+    .buy:hover { background: #ff5c78; }
+    .buy.cant { opacity: 0.45; cursor: default; }
+    .readyBtn { display: block; margin: 8px auto 0; padding: 10px 26px; font: inherit; font-size: 16px; font-weight: bold; color: white; background: #3fae5a; border: none; border-radius: 9px; cursor: pointer; }
+    .readyBtn.on { background: #2d3a66; color: #9fe6b0; }
+    #resultBar { text-align: center; margin: 16px auto 0; padding: 14px; max-width: 520px; background: #16213e; border: 2px solid gold; border-radius: 12px; }
+    #resultBar .big { font-size: 28px; font-weight: bold; color: gold; }
+    #resultBar .why { color: #aab; margin: 4px 0 10px; }
+    .actBtn { margin: 4px; padding: 10px 22px; font: inherit; font-size: 16px; font-weight: bold; color: white; background: #e94560; border: none; border-radius: 8px; cursor: pointer; }
+    .actBtn.alt { background: #2d3a66; }
+    #gameHint { text-align: center; margin-top: 12px; font-size: 13px; color: #8892b0; }
+    @media (max-width: 700px) { #boards { flex-direction: column; align-items: center; } .side { width: 100%; } }
+  </style>
+</head>
+<body>
+  <a id="backLink" href="snake.html">&larr; Snake</a>
+
+  <!-- ================= MENU ================= -->
+  <div id="menuScreen">
+    <h1>SNAKE<small>2 PLAYERS</small></h1>
+    <div class="sub">Two snakes, two screens, one keyboard. The match has 3 levels of 1 minute each, and every level is faster than the last. If both snakes survive all 3 levels, the player with the most points wins. If a snake crashes into itself before that, the other player wins!</div>
+
+    <div class="ctrls">
+      <div class="ctrl p1">
+        <b style="color:#6fdc8c">Player 1 (left)</b><br>
+        Move: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>
+        Skills: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><kbd>5</kbd><br>
+        Ready (shop): <kbd>Space</kbd>
+      </div>
+      <div class="ctrl p2">
+        <b style="color:#7fb6ff">Player 2 (right)</b><br>
+        Move: <kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd><br>
+        Skills: <kbd>6</kbd><kbd>7</kbd><kbd>8</kbd><kbd>9</kbd><kbd>0</kbd><br>
+        Ready (shop): <kbd>Enter</kbd>
+      </div>
+    </div>
+
+    <button id="startBtn" class="bigBtn">Start Match</button>
+    <div class="smallNote">After every level you can buy skills with the coins you won (cheaper than in the normal game). Skills only use the number keys.</div>
+  </div>
+
+  <!-- ================= GAME ================= -->
+  <div id="gameScreen" class="hidden">
+    <div id="topBar"><div id="levelLabel">Level 1 / 3</div><div id="timer">1:00</div></div>
+    <div id="boards">
+      <div class="side" id="side0">
+        <div class="sideHead"><b style="color:#6fdc8c">Player 1</b><span class="hint">W A S D</span>
+          <span>Score <span class="v" id="score0">0</span> &nbsp; Coins <span class="gold" id="coins0">0</span></span></div>
+        <div class="skillBar" id="bar0"></div>
+        <div class="boardWrap"><canvas class="board" id="cv0" width="448" height="448"></canvas><div class="shop hidden" id="shop0"></div></div>
+      </div>
+      <div class="side" id="side1">
+        <div class="sideHead"><b style="color:#7fb6ff">Player 2</b><span class="hint">Arrow keys</span>
+          <span>Score <span class="v" id="score1">0</span> &nbsp; Coins <span class="gold" id="coins1">0</span></span></div>
+        <div class="skillBar" id="bar1"></div>
+        <div class="boardWrap"><canvas class="board" id="cv1" width="448" height="448"></canvas><div class="shop hidden" id="shop1"></div></div>
+      </div>
+    </div>
+    <div id="resultBar" class="hidden"></div>
+    <div id="gameHint">P = pause &nbsp;|&nbsp; M = back to menu (when paused or after the match)</div>
+  </div>
+
+  <script>
+    // ---- Settings ----
+    const GRID = 32;              // pixels per cell
+    const TILES = 14;             // the board is 14 x 14 cells
+    const gridSize = GRID;        // (the shared drawing code uses these names)
+    const bodyRadius = (GRID - 6) / 2;
+    const SAMPLE_STEP = 2;
+    const LEVEL_MS = 60000;       // one level lasts 1 minute
+    const INTRO_MS = 3000;        // the first 3 seconds of a level are at normal speed, then it speeds up
+    const RAMP_MS = 2000;
+    const BASE_DELAY = 150;       // ms per step at the start of a level
+    const MAGNET_RANGE = 5;
+    const GROW_SPEED = 0.35;
+    const SPECIAL_EVERY = 4;
+    const COINS_PER_POINT = 2;    // 2 coins for every point, so skills are easy to get
+    const POINTS = { blackberry: 1, strawberry: 2, orange: 3 };
+    const RAINBOW_AT = 7.6;
+
+    // The same skills as in the normal game, but cheaper
+    const SKILLS = [
+      { id: "ghost",  name: "Ghost Mode",   price: 25, duration: 5000,  desc: "Pass through your own body for 5 seconds." },
+      { id: "double", name: "Double Coins", price: 40, duration: 15000, desc: "Twice the coins for 15 seconds." },
+      { id: "magnet", name: "Fruit Magnet", price: 25, duration: 8000,  desc: "Close fruits slide toward your head for 8 seconds." },
+      { id: "lucky",  name: "Lucky Fruits", price: 25, duration: 15000, desc: "A special fruit after every normal fruit for 15 seconds." },
+      { id: "shield", name: "Shield",       price: 60, duration: 60000, desc: "If you hit yourself you survive, for 1 minute." }
+    ];
+    const KEYS = [
+      { dir: { KeyW: [0, -1], KeyS: [0, 1], KeyA: [-1, 0], KeyD: [1, 0] },
+        skills: ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5"], labels: ["1", "2", "3", "4", "5"], ready: "Space" },
+      { dir: { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] },
+        skills: ["Digit6", "Digit7", "Digit8", "Digit9", "Digit0"], labels: ["6", "7", "8", "9", "0"], ready: "Enter" }
+    ];
+
+    // Skin colors: the hue (0-360) of the snake at level 1 ... 7. Level 8 = rainbow.
+    const skins = [
+      { id: "green",  palette: [130, 150, 170, 190, 210, 240, 270] },
+      { id: "blue",   palette: [210, 225, 240, 255, 270, 285, 300] },
+      { id: "red",    palette: [0, 10, 20, 30, 42, 54, 66] },
+      { id: "orange", palette: [28, 40, 52, 64, 76, 90, 105] },
+      { id: "pink",   palette: [325, 310, 295, 280, 265, 250, 235] },
+      { id: "purple", palette: [275, 290, 305, 320, 335, 345, 355] }
+    ];
+
+    function paletteHue(skin, lv) {
+      const p = skin.palette;
+      const f = Math.max(0, Math.min(p.length - 1, lv - 1));
+      const i = Math.floor(f);
+      const t = f - i;
+      return p[i] + (p[Math.min(i + 1, p.length - 1)] - p[i]) * t;
+    }
+    function lookFor(skin, lv) {
+      if (lv >= RAINBOW_AT) return { rainbow: true };
+      return { hue: paletteHue(skin, lv) };
+    }
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    // ---- Background: a calm, old-fashioned "jungle temple" look with a few faint vines at the edges ----
+    // It is drawn only once (on a hidden canvas), so it costs nothing while you play.
+    function makeVineBackground(w, h, seed) {
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const g = c.getContext("2d");
+      let s = seed || 1;
+      const rnd = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+
+      // flat, dark mossy base
+      g.fillStyle = "#1b2a29";
+      g.fillRect(0, 0, w, h);
+
+      // very faint old stone tiles
+      g.strokeStyle = "rgba(255,255,255,0.025)";
+      g.lineWidth = 1;
+      const tile = 64;
+      g.beginPath();
+      for (let x = tile; x < w; x += tile) { g.moveTo(x + 0.5, 0); g.lineTo(x + 0.5, h); }
+      for (let y = tile; y < h; y += tile) { g.moveTo(0, y + 0.5); g.lineTo(w, y + 0.5); }
+      g.stroke();
+
+      // soft darker corners (vignette)
+      const vg = g.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.45, w / 2, h / 2, Math.max(w, h) * 0.75);
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, "rgba(0,0,0,0.28)");
+      g.fillStyle = vg;
+      g.fillRect(0, 0, w, h);
+
+      const vineCol = "rgba(62,112,76,0.55)";
+      const leafCols = ["rgba(70,128,84,0.5)", "rgba(88,148,96,0.42)", "rgba(54,104,70,0.55)"];
+
+      function leaf(x, y, ang, size) {
+        g.fillStyle = leafCols[Math.floor(rnd() * leafCols.length)];
+        g.beginPath();
+        g.ellipse(x, y, size, size * 0.45, ang, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // one wavy vine, leaves on both sides
+      function vine(x0, y0, ang, len, wob, thick) {
+        const ux = Math.cos(ang), uy = Math.sin(ang);
+        const nx = -uy, ny = ux;
+        const ph = rnd() * 6;
+        g.strokeStyle = vineCol;
+        g.lineWidth = thick;
+        g.lineCap = "round";
+        g.beginPath();
+        let lastLeaf = 0;
+        const pts = [];
+        for (let t = 0; t <= len; t += 4) {
+          const o = Math.sin(t / 22 + ph) * wob;
+          const px = x0 + ux * t + nx * o;
+          const py = y0 + uy * t + ny * o;
+          pts.push([px, py, t]);
+          if (t === 0) g.moveTo(px, py); else g.lineTo(px, py);
+        }
+        g.stroke();
+        let side = 1;
+        for (const p of pts) {
+          if (p[2] - lastLeaf >= 15 && p[2] < len - 6) {
+            lastLeaf = p[2];
+            const size = 6 + rnd() * 4 - (p[2] / len) * 2.5;
+            leaf(p[0] + nx * side * 5, p[1] + ny * side * 5, ang + side * 0.9 + (rnd() - 0.5) * 0.4, size);
+            side = -side;
+          }
+        }
+        // a tiny curl at the end
+        g.beginPath();
+        const e = pts[pts.length - 1];
+        g.arc(e[0] + ux * 3, e[1] + uy * 3, 3, 0, Math.PI * 1.6);
+        g.stroke();
+        return pts;
+      }
+
+      function flower(x, y) {
+        g.fillStyle = rnd() < 0.5 ? "rgba(214,170,80,0.5)" : "rgba(200,120,120,0.45)";
+        for (let i = 0; i < 5; i++) {
+          const a = i / 5 * Math.PI * 2;
+          g.beginPath(); g.arc(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2, 0, Math.PI * 2); g.fill();
+        }
+        g.fillStyle = "rgba(240,220,150,0.55)";
+        g.beginPath(); g.arc(x, y, 1.6, 0, Math.PI * 2); g.fill();
+      }
+
+      const m = Math.min(w, h);
+      // vines hanging from the top edge
+      const nTop = Math.max(3, Math.round(w / 120));
+      for (let i = 0; i < nTop; i++) {
+        const x = (i + 0.3 + rnd() * 0.4) * w / nTop;
+        const pts = vine(x, -4, Math.PI / 2 + (rnd() - 0.5) * 0.2, m * (0.07 + rnd() * 0.13), 5, 2.4);
+        if (rnd() < 0.5) { const p = pts[Math.floor(pts.length * 0.6)]; flower(p[0] + 6, p[1]); }
+      }
+      // vines creeping in from the four corners, along the edges
+      const corners = [[0, 0, 0, 1], [w, 0, Math.PI, 1], [0, h, 0, -1], [w, h, Math.PI, -1]];
+      for (const k of corners) {
+        const pts = vine(k[0], k[1] + k[3] * 3, k[2] + k[3] * 0.18, m * 0.3, 7, 3);
+        const p = pts[Math.floor(pts.length * 0.7)];
+        flower(p[0], p[1] + k[3] * 8);
+        vine(k[0] + (k[2] === 0 ? 3 : -3), k[1], k[3] > 0 ? Math.PI / 2 : -Math.PI / 2, m * 0.24, 6, 2.6);
+      }
+      // a few small leaves/dots scattered near the edges only
+      for (let i = 0; i < 18; i++) {
+        const edge = Math.floor(rnd() * 4);
+        const along = rnd();
+        const d = 4 + rnd() * 16;
+        const x = edge === 0 ? along * w : edge === 1 ? w - d : edge === 2 ? along * w : d;
+        const y = edge === 0 ? d : edge === 1 ? along * h : edge === 2 ? h - d : along * h;
+        leaf(x, y, rnd() * 3, 4 + rnd() * 3);
+      }
+      return c;
+    }
+
+
+    function rrect(g, x, y, w, h, r) {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    function wrapDiff2(a, b) {
+      let d = a - b;
+      if (d > TILES / 2) d -= TILES;
+      if (d < -TILES / 2) d += TILES;
+      return d;
+    }
+
+    function samplePath(pts, step) {
+      const samples = [];
+      let d = 0;
+      let segStart = 0;
+      let lux = 1, luy = 0;
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        if (len === 0) continue;
+        const ux = (b.x - a.x) / len;
+        const uy = (b.y - a.y) / len;
+        lux = ux; luy = uy;
+
+        while (d <= segStart + len) {
+          const t = d - segStart;
+          samples.push({ x: a.x + ux * t, y: a.y + uy * t, ux: ux, uy: uy, d: d });
+          d += step;
+        }
+        segStart += len;
+      }
+
+      const last = pts[pts.length - 1];
+      if (samples.length === 0 || samples[samples.length - 1].d < segStart - 0.01) {
+        samples.push({ x: last.x, y: last.y, ux: lux, uy: luy, d: segStart });
+      }
+      return { samples: samples, total: segStart };
+    }
+
+    function radiusAt(d, total) {
+      const taperLen = Math.min(gridSize * 2.5, total * 0.5);
+      const f = Math.min(1, d / taperLen);
+      return bodyRadius * (0.2 + 0.8 * Math.sin(f * Math.PI / 2));
+    }
+
+    function drawLeaf(g, x, y) {
+      g.fillStyle = "#3ddc84";
+      g.beginPath();
+      g.ellipse(x, y, 5, 3, -0.5, 0, Math.PI * 2);
+      g.fill();
+    }
+
+    function drawFruitAt(g, type, cx, cy, size, time, special, phase) {
+      const bob = Math.sin(time / 200 + phase) * 2;
+      const pulse = 1 + Math.sin(time / 250) * 0.07;
+
+      g.save();
+      g.translate(cx, cy + bob);
+      g.scale(size * pulse, size * pulse);
+
+      if (special) {
+        g.shadowColor = "gold";
+        g.shadowBlur = 14 + Math.sin(time / 150) * 6;
+      }
+
+      if (type === "blackberry") {
+        g.fillStyle = "#9d4edd";
+        const spots = [[0, -4], [-4, 0], [4, 0], [-2, 4], [2, 4], [0, 0]];
+        for (const s of spots) {
+          g.beginPath();
+          g.arc(s[0], s[1], 4.5, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.6)";
+        g.beginPath();
+        g.arc(-2, -5, 1.5, 0, Math.PI * 2);
+        g.fill();
+        drawLeaf(g, 0, -9);
+      }
+
+      if (type === "strawberry") {
+        g.fillStyle = "#ff3b5c";
+        g.beginPath();
+        g.moveTo(-9, -5);
+        g.quadraticCurveTo(0, -12, 9, -5);
+        g.quadraticCurveTo(8, 6, 0, 11);
+        g.quadraticCurveTo(-8, 6, -9, -5);
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#ffe066";
+        for (const s of [[-4, -2], [3, -3], [0, 2], [-3, 5], [4, 3]]) {
+          g.fillRect(s[0], s[1], 1.6, 1.6);
+        }
+        drawLeaf(g, -3, -9);
+        drawLeaf(g, 3, -9);
+      }
+
+      if (type === "orange") {
+        g.fillStyle = "#ff9f1c";
+        g.beginPath();
+        g.arc(0, 1, 10, 0, Math.PI * 2);
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "rgba(255,255,255,0.35)";
+        g.beginPath();
+        g.arc(-4, -3, 3, 0, Math.PI * 2);
+        g.fill();
+        drawLeaf(g, 2, -9);
+      }
+
+      g.restore();
+    }
+
+    function drawSkillIcon(g, id, time, cx, cy, scale) {
+      g.save();
+      g.translate(cx, cy);
+      g.scale(scale, scale);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+
+      if (id === "ghost") {
+        g.translate(0, Math.sin(time / 300) * 2);
+        g.shadowColor = "#8fd3ff";
+        g.shadowBlur = 8;
+        g.fillStyle = "#eaf2ff";
+        g.beginPath();
+        g.arc(0, -2, 13, Math.PI, 0);
+        g.lineTo(13, 14);
+        g.quadraticCurveTo(8.7, 8, 4.3, 14);
+        g.quadraticCurveTo(0, 8, -4.3, 14);
+        g.quadraticCurveTo(-8.7, 8, -13, 14);
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#1a1a2e";
+        g.beginPath(); g.ellipse(-5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(0, 3, 2.4, 3, 0, 0, Math.PI * 2); g.fill();
+      }
+
+      if (id === "slow") {
+        g.fillStyle = "#2d3a66";
+        g.strokeStyle = "#e8eefc";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 2;
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 2;
+          g.beginPath();
+          g.moveTo(Math.cos(a) * 10, Math.sin(a) * 10);
+          g.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+          g.stroke();
+        }
+        const ma = time / 1200 - Math.PI / 2;
+        const ha = time / 9000 - Math.PI / 2;
+        g.strokeStyle = "#8fd3ff";
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ma) * 10, Math.sin(ma) * 10);
+        g.stroke();
+        g.strokeStyle = "#ffffff";
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ha) * 6, Math.sin(ha) * 6);
+        g.stroke();
+      }
+
+      if (id === "double") {
+        const sx = Math.max(0.12, Math.abs(Math.cos(time / 450)));
+        g.scale(sx, 1);
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.arc(0, 0, 10, 0, Math.PI * 2);
+        g.stroke();
+        g.fillStyle = "#8a6100";
+        g.font = "bold 13px Arial";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText("x2", 0, 1);
+      }
+
+      if (id === "magnet") {
+        g.lineCap = "butt";
+        g.lineWidth = 8;
+        g.strokeStyle = "#e94560";
+        g.beginPath();
+        g.moveTo(-11, -9);
+        g.lineTo(-11, 2);
+        g.arc(0, 2, 11, Math.PI, 0, true);
+        g.lineTo(11, -9);
+        g.stroke();
+        g.fillStyle = "#dfe6f2";
+        g.fillRect(-15, -12, 8, 7);
+        g.fillRect(7, -12, 8, 7);
+
+        const starts = [[-24, -24], [0, -30], [24, -24]];
+        for (let k = 0; k < 3; k++) {
+          const t = ((time / 900) + k / 3) % 1;
+          const x = starts[k][0] * (1 - t);
+          const y = starts[k][1] + (-8 - starts[k][1]) * t;
+          g.globalAlpha = 1 - t * 0.8;
+          g.fillStyle = "#ffe066";
+          g.beginPath();
+          g.arc(x, y, 2.4, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.globalAlpha = 1;
+      }
+
+      if (id === "lucky") {
+        const pulse = 1 + Math.sin(time / 250) * 0.08;
+        g.rotate(Math.sin(time / 700) * 0.15);
+        g.scale(pulse, pulse);
+        g.shadowColor = "gold";
+        g.shadowBlur = 8;
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 2;
+        g.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? 14 : 6;
+          const a = -Math.PI / 2 + i * Math.PI / 5;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r;
+          if (i === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.stroke();
+
+        g.strokeStyle = "#ffffff";
+        g.lineWidth = 1.5;
+        g.globalAlpha = 0.5 + 0.5 * Math.sin(time / 200);
+        g.beginPath();
+        g.moveTo(15, -16); g.lineTo(15, -10);
+        g.moveTo(12, -13); g.lineTo(18, -13);
+        g.moveTo(-17, 8); g.lineTo(-17, 14);
+        g.moveTo(-20, 11); g.lineTo(-14, 11);
+        g.stroke();
+      }
+
+      if (id === "shield") {
+        const pulse = 1 + Math.sin(time / 300) * 0.04;
+        g.scale(pulse, pulse);
+        g.shadowColor = "#6cf"; g.shadowBlur = 8;
+        g.fillStyle = "#3a7bd5"; g.strokeStyle = "#e8f4ff"; g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, -15); g.quadraticCurveTo(10, -12, 14, -12);
+        g.quadraticCurveTo(14, 6, 0, 16); g.quadraticCurveTo(-14, 6, -14, -12);
+        g.quadraticCurveTo(-10, -12, 0, -15);
+        g.closePath(); g.fill(); g.shadowBlur = 0; g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = 3;
+        g.beginPath(); g.moveTo(-6, 0); g.lineTo(-1.5, 5); g.lineTo(7, -6); g.stroke();
+      }
+
+      g.restore();
+    }
+
+    function headPath(g, R, k) {
+      g.beginPath();
+      g.moveTo(R * 1.7 * k, 0);
+      g.quadraticCurveTo(R * 1.35 * k, R * 0.95 * k, R * 0.4 * k, R * 1.2 * k);
+      g.quadraticCurveTo(-R * 0.3 * k, R * 1.3 * k, -R * 0.75 * k, R * 0.8 * k);
+      g.lineTo(-R * 0.75 * k, -R * 0.8 * k);
+      g.quadraticCurveTo(-R * 0.3 * k, -R * 1.3 * k, R * 0.4 * k, -R * 1.2 * k);
+      g.quadraticCurveTo(R * 1.35 * k, -R * 0.95 * k, R * 1.7 * k, 0);
+      g.closePath();
+    }
+
+    function drawSnakeAt(g, path, look, time, dirx, diry, showTongue) {
+      const S = path.samples;
+      const total = path.total;
+      const R = bodyRadius;
+      const dark = look.rainbow ? "rgb(28, 22, 52)" : "hsl(" + look.hue + ", 55%, 17%)";
+
+      // 1) Dark outline around the whole body
+      g.fillStyle = dark;
+      for (const s of S) {
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total) + 2.2, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 2) Body: lots of tiny circles in a row make a smooth, tapered band
+      if (!look.rainbow) g.fillStyle = "hsl(" + look.hue + ", 65%, 48%)";
+      for (const s of S) {
+        if (look.rainbow) {
+          g.fillStyle = "hsl(" + ((time / 10 + s.d * 0.8) % 360) + ", 80%, 55%)";
+        }
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total), 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 3) A lighter ridge along the back
+      g.fillStyle = look.rainbow ? "rgba(255, 255, 255, 0.25)" : "hsla(" + look.hue + ", 85%, 78%, 0.35)";
+      for (const s of S) {
+        g.beginPath();
+        g.arc(s.x, s.y, radiusAt(s.d, total) * 0.32, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      // 4) Scales: little "V" shapes pointing toward the head
+      g.lineWidth = 2.2;
+      g.lineJoin = "round";
+      g.lineCap = "round";
+      g.strokeStyle = look.rainbow ? "rgba(255, 255, 255, 0.55)" : "hsla(" + look.hue + ", 70%, 18%, 0.55)";
+      const period = gridSize * 0.62;
+      for (let dd = period; dd < total - gridSize * 0.55; dd += period) {
+        const s = S[Math.round(dd / SAMPLE_STEP)];
+        if (!s) continue;
+        const r = radiusAt(s.d, total);
+        const nx = -s.uy;
+        const ny = s.ux;
+        const bx = s.x - s.ux * r * 0.6;
+        const by = s.y - s.uy * r * 0.6;
+        g.beginPath();
+        g.moveTo(bx + nx * r * 0.7, by + ny * r * 0.7);
+        g.lineTo(s.x + s.ux * r * 0.35, s.y + s.uy * r * 0.35);
+        g.lineTo(bx - nx * r * 0.7, by - ny * r * 0.7);
+        g.stroke();
+      }
+
+      // 5) Head
+      const hc = S[S.length - 1];
+      g.save();
+      g.translate(hc.x, hc.y);
+      g.rotate(Math.atan2(diry, dirx));
+
+      // Tongue (drawn first, so it comes out from under the head)
+      if (showTongue) {
+        const phase = (time % 1000) / 1000;
+        if (phase < 0.35) {
+          const len = Math.sin((phase / 0.35) * Math.PI) * 13;
+          const sx = R * 1.55;
+          const ex = sx + 3 + len;
+          g.strokeStyle = "#ff4d6d";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(sx, 0);
+          g.lineTo(ex, 0);
+          g.moveTo(ex, 0);
+          g.lineTo(ex + 4, -3.5);
+          g.moveTo(ex, 0);
+          g.lineTo(ex + 4, 3.5);
+          g.stroke();
+        }
+      }
+
+      // Arrow-shaped head with a dark outline
+      g.fillStyle = look.rainbow
+        ? "hsl(" + ((time / 10) % 360) + ", 85%, 45%)"
+        : "hsl(" + look.hue + ", 62%, 38%)";
+      g.strokeStyle = dark;
+      g.lineWidth = 2.6;
+      headPath(g, R, 1);
+      g.fill();
+      g.stroke();
+
+      // Lighter plate on top of the head
+      g.fillStyle = look.rainbow ? "rgba(255, 255, 255, 0.25)" : "hsla(" + look.hue + ", 80%, 62%, 0.4)";
+      headPath(g, R, 0.62);
+      g.fill();
+
+      // Amber eyes with slit pupils, and two nostrils
+      for (const side of [-1, 1]) {
+        const ex = R * 0.5;
+        const ey = side * R * 0.68;
+        g.fillStyle = "#ffc933";
+        g.strokeStyle = dark;
+        g.lineWidth = 1.2;
+        g.beginPath();
+        g.ellipse(ex, ey, 4.4, 4.2, 0, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.fillStyle = "#111";
+        g.beginPath();
+        g.ellipse(ex, ey, 3.2, 1.2, 0, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = "rgba(255, 255, 255, 0.85)";
+        g.beginPath();
+        g.arc(ex - 1.5, ey - 1.4, 0.9, 0, Math.PI * 2);
+        g.fill();
+
+        g.fillStyle = "rgba(0, 0, 0, 0.6)";
+        g.beginPath();
+        g.arc(R * 1.35, side * R * 0.2, 1.2, 0, Math.PI * 2);
+        g.fill();
+      }
+
+      g.restore();
+    }
+
+    // ---- One board = one player's game ----
+    class Board {
+      constructor(cfg) {
+        this.canvas = cfg.canvas;
+        this.ctx = this.canvas.getContext("2d");
+        this.layer = document.createElement("canvas");
+        this.layer.width = this.canvas.width;
+        this.layer.height = this.canvas.height;
+        this.lctx = this.layer.getContext("2d");
+        this.bg = makeVineBackground(this.canvas.width, this.canvas.height, cfg.bgSeed);
+        this.skin = cfg.skin;
+        this.idx = cfg.idx;
+        this.reset(1);
+      }
+
+      reset(seed) {
+        this.rand = mulberry32(seed);   // both players get the same fruit order (fair!)
+        this.snake = [{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }];
+        this.dx = 1; this.dy = 0;
+        this.queue = [];   // turns waiting for the next step
+        this.score = 0;
+        this.coins = 0;
+        this.eaten = 0;
+        this.growQueue = 0;
+        this.visLen = (this.snake.length - 1) * GRID;
+        this.special = null;
+        this.food = null;
+        this.food = this.makeFruit("blackberry");
+        this.dead = false;
+        this.acc = 0;
+        this.delay = BASE_DELAY;
+        this.prevDelay = 0;
+        this.shownLevel = 1;
+        this.shieldFlash = 0;
+        this.skillLeft = {};
+        this.skillCounts = {};
+        for (const sk of SKILLS) { this.skillLeft[sk.id] = 0; this.skillCounts[sk.id] = 0; }
+      }
+
+      // ---- fruits ----
+      isOccupied(c) {
+        if (this.snake.some(p => p.x === c.x && p.y === c.y)) return true;
+        if (this.food && this.food.x === c.x && this.food.y === c.y) return true;
+        if (this.special && this.special.x === c.x && this.special.y === c.y) return true;
+        return false;
+      }
+      randomFreeCell() {
+        let c;
+        do { c = { x: Math.floor(this.rand() * TILES), y: Math.floor(this.rand() * TILES) }; } while (this.isOccupied(c));
+        return c;
+      }
+      makeFruit(type) {
+        const c = this.randomFreeCell();
+        return { x: c.x, y: c.y, vx: c.x, vy: c.y, type: type };
+      }
+      spawnSpecial() {
+        this.special = this.makeFruit(this.rand() < 0.5 ? "strawberry" : "orange");
+      }
+      smoothFruit(f) {
+        if (!f) return;
+        f.vx += wrapDiff2(f.x, f.vx) * 0.35;
+        f.vy += wrapDiff2(f.y, f.vy) * 0.35;
+        if (f.vx < 0) f.vx += TILES;
+        if (f.vx >= TILES) f.vx -= TILES;
+        if (f.vy < 0) f.vy += TILES;
+        if (f.vy >= TILES) f.vy -= TILES;
+      }
+      addScore(points) {
+        this.score += points;
+        this.coins += points * COINS_PER_POINT * (this.skillLeft.double > 0 ? 2 : 1);
+      }
+      checkEat(head) {
+        if (head.x === this.food.x && head.y === this.food.y) {
+          this.addScore(POINTS[this.food.type]);
+          this.eaten++;
+          this.growQueue++;
+          this.food = this.makeFruit("blackberry");
+          if (!this.special && (this.skillLeft.lucky > 0 || this.eaten % SPECIAL_EVERY === 0)) this.spawnSpecial();
+        }
+        if (this.special && head.x === this.special.x && head.y === this.special.y) {
+          this.addScore(POINTS[this.special.type]);
+          this.special = null;
+          this.growQueue++;
+        }
+      }
+      magnetPull(head) {
+        for (const f of [this.food, this.special]) {
+          if (!f) continue;
+          if (Math.abs(wrapDiff2(head.x, f.x)) + Math.abs(wrapDiff2(head.y, f.y)) > MAGNET_RANGE) continue;
+          for (let step = 0; step < 2; step++) {
+            const ddx = wrapDiff2(head.x, f.x);
+            const ddy = wrapDiff2(head.y, f.y);
+            if (Math.abs(ddx) >= Math.abs(ddy) && ddx !== 0) f.x = (f.x + Math.sign(ddx) + TILES) % TILES;
+            else if (ddy !== 0) f.y = (f.y + Math.sign(ddy) + TILES) % TILES;
+          }
+        }
+      }
+
+      // ---- skills ----
+      useSkill(i) {
+        const sk = SKILLS[i];
+        if (!sk || this.dead) return false;
+        if (this.skillCounts[sk.id] <= 0 || this.skillLeft[sk.id] > 0) return false;
+        this.skillCounts[sk.id]--;
+        this.skillLeft[sk.id] = sk.duration;
+        if (sk.id === "lucky" && !this.special) this.spawnSpecial();
+        return true;
+      }
+
+      setDir(wx, wy) {
+        if (this.dead) return;
+        const last = this.queue.length ? this.queue[this.queue.length - 1] : [this.dx, this.dy];
+        if (wx === last[0] && wy === last[1]) return;
+        if (wx === -last[0] && wy === -last[1]) return;
+        if (this.queue.length < 2) this.queue.push([wx, wy]);
+        // make the turn happen sooner (at most ~80 ms wait)
+        if (this.queue.length === 1 && this.delay - this.acc > 80) this.acc = this.delay - 80;
+      }
+
+      // ---- one step ----
+      tick() {
+        const head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
+        if (head.x >= TILES) head.x = 0;
+        if (head.x < 0) head.x = TILES - 1;
+        if (head.y >= TILES) head.y = 0;
+        if (head.y < 0) head.y = TILES - 1;
+
+        if (this.skillLeft.ghost <= 0) {
+          const solid = Math.min(this.snake.length, Math.ceil(this.visLen / GRID - 0.001));
+          let hit = false;
+          for (let i = 0; i < solid; i++) {
+            if (this.snake[i].x === head.x && this.snake[i].y === head.y) { hit = true; break; }
+          }
+          if (hit) {
+            if (this.skillLeft.shield > 0) this.shieldFlash = performance.now() + 450;
+            else { this.dead = true; return; }
+          }
+        }
+
+        this.snake.unshift(head);
+        this.checkEat(head);
+        if (this.skillLeft.magnet > 0) { this.magnetPull(head); this.checkEat(head); }
+        if (this.growQueue > 0) this.growQueue--; else this.snake.pop();
+        if (this.queue.length) {
+          const d = this.queue.shift();
+          this.dx = d[0];
+          this.dy = d[1];
+        }
+      }
+
+      // dt in ms, delay = ms per step
+      update(dt, delay) {
+        if (this.dead) return;
+        for (const sk of SKILLS) if (this.skillLeft[sk.id] > 0) this.skillLeft[sk.id] = Math.max(0, this.skillLeft[sk.id] - dt);
+        const colorLevel = 1 + Math.floor(this.score / 10);
+        this.shownLevel += (Math.min(8, colorLevel) - this.shownLevel) * 0.05;
+
+        const target = (this.snake.length - 1) * GRID;
+        if (this.visLen < target) this.visLen = Math.min(target, this.visLen + GROW_SPEED * GRID / delay * dt);
+        else if (this.visLen > target) this.visLen = target;
+
+        if (this.prevDelay && delay !== this.prevDelay) this.acc = this.acc / this.prevDelay * delay;
+        this.prevDelay = delay;
+        this.delay = delay;
+        this.acc += dt;
+        while (this.acc >= delay && !this.dead) {
+          this.acc -= delay;
+          this.tick();
+        }
+      }
+
+      // ---- drawing ----
+      buildPath(progress) {
+        const head = this.snake[0];
+        const cells = [{ x: head.x + this.dx * progress, y: head.y + this.dy * progress }];
+        let cur = { x: head.x, y: head.y };
+        cells.push(cur);
+        for (let i = 1; i < this.snake.length; i++) {
+          cur = { x: cur.x + wrapDiff2(this.snake[i].x, this.snake[i - 1].x), y: cur.y + wrapDiff2(this.snake[i].y, this.snake[i - 1].y) };
+          cells.push(cur);
+        }
+        const px = cells.map(p => ({ x: p.x * GRID + GRID / 2, y: p.y * GRID + GRID / 2 }));
+        const result = [px[0]];
+        let remaining = this.visLen;
+        for (let i = 1; i < px.length; i++) {
+          const a = px[i - 1], b = px[i];
+          const len = Math.hypot(b.x - a.x, b.y - a.y);
+          if (len >= remaining) {
+            const t = len === 0 ? 0 : remaining / len;
+            result.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+            break;
+          }
+          result.push(b);
+          remaining -= len;
+        }
+        return result.reverse();
+      }
+
+      drawFruit(f, time, special) {
+        if (!f) return;
+        drawFruitAt(this.ctx, f.type, f.vx * GRID + GRID / 2, f.vy * GRID + GRID / 2, GRID / 24, time, special, f.x);
+      }
+
+      drawShieldBubble(g, p, time) {
+        const left = this.skillLeft.shield;
+        if (left < 3000 && Math.floor(time / 150) % 2 === 0) return;
+        const flash = performance.now() < this.shieldFlash;
+        g.save();
+        g.translate(p.x, p.y);
+        const r = 27 + Math.sin(time / 250) * 1.5 + (flash ? 6 : 0);
+        g.fillStyle = flash ? "rgba(140,210,255,0.45)" : "rgba(100,180,255,0.16)";
+        g.strokeStyle = flash ? "rgba(255,255,255,0.95)" : "rgba(150,215,255,0.8)";
+        g.lineWidth = flash ? 4 : 2.5;
+        g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.restore();
+      }
+
+      drawSnake(time) {
+        const ctx = this.ctx;
+        const W = this.canvas.width, H = this.canvas.height;
+        const look = lookFor(this.skin, this.shownLevel);
+        const progress = this.dead ? 1 : Math.max(0, Math.min(1, this.acc / this.delay));
+        const pts = this.buildPath(progress);
+        const path = samplePath(pts, SAMPLE_STEP);
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const p of pts) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
+
+        const ghost = this.skillLeft.ghost > 0;
+        const g = ghost ? this.lctx : ctx;
+        if (ghost) this.lctx.clearRect(0, 0, W, H);
+        const margin = 45;
+        for (const ox of [-W, 0, W]) {
+          for (const oy of [-H, 0, H]) {
+            if (maxX + ox < -margin || minX + ox > W + margin) continue;
+            if (maxY + oy < -margin || minY + oy > H + margin) continue;
+            g.save();
+            g.translate(ox, oy);
+            drawSnakeAt(g, path, look, time, this.dx, this.dy, !this.dead);
+            if (this.skillLeft.shield > 0 && !this.dead) this.drawShieldBubble(g, pts[pts.length - 1], time);
+            g.restore();
+          }
+        }
+        if (ghost) {
+          let alpha = 0.5;
+          if (this.skillLeft.ghost < 1500) alpha = 0.5 + 0.4 * (Math.floor(time / 120) % 2);
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(this.layer, 0, 0);
+          ctx.restore();
+        }
+      }
+
+      // lines = text shown on top of the board (big title first)
+      draw(time, lines, bigSize) {
+        const ctx = this.ctx;
+        const W = this.canvas.width, H = this.canvas.height;
+        ctx.drawImage(this.bg, 0, 0);
+        this.smoothFruit(this.food);
+        this.smoothFruit(this.special);
+        this.drawFruit(this.food, time, false);
+        this.drawFruit(this.special, time, true);
+        this.drawSnake(time);
+        if (lines && lines.length) {
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.font = (bigSize || 44) + "px Arial";
+          ctx.fillText(lines[0], W / 2, H / 2 - 4);
+          ctx.font = "18px Arial";
+          for (let i = 1; i < lines.length; i++) ctx.fillText(lines[i], W / 2, H / 2 + 26 + (i - 1) * 26);
+        }
+      }
+    }
+
+    // ---- The match ----
+    const $ = id => document.getElementById(id);
+    let boards = [];
+    let phase = "menu";          // menu, countdown, playing, shop, over
+    let paused = false;
+    const totalLevels = 3;       // the match always has 3 levels
+    let levelIdx = 0;
+    let levelElapsed = 0;
+    let countdownMs = 0;
+    let ready = [false, false];
+    let result = null;           // { winner: 0 | 1 | -1, reason }
+    let shopIcons = [];
+    let slots = [[], []];
+    let lastTime = 0;
+
+
+    function pickSkins() {
+      let mine = "green";
+      try {
+        const owned = JSON.parse(localStorage.getItem("snakeOwned")) || ["green"];
+        const eq = localStorage.getItem("snakeSkin");
+        if (eq && owned.includes(eq)) mine = eq;
+      } catch (e) {}
+      const other = ["blue", "red", "orange", "pink", "purple", "green"].find(id => id !== mine);
+      return [skins.find(s => s.id === mine), skins.find(s => s.id === other)];
+    }
+
+    function buildSkillBars() {
+      for (let p = 0; p < 2; p++) {
+        const bar = $("bar" + p);
+        bar.innerHTML = "";
+        slots[p] = [];
+        SKILLS.forEach(function (sk, i) {
+          const cv = document.createElement("canvas");
+          cv.className = "skillIcon";
+          cv.width = 64; cv.height = 64;
+          cv.title = sk.name + " - " + sk.desc + " (key " + KEYS[p].labels[i] + ")";
+          cv.addEventListener("click", function () { useSkill(p, i); });
+          bar.appendChild(cv);
+          slots[p].push({ i: i, g: cv.getContext("2d") });
+        });
+      }
+    }
+
+    function drawSlot(p, e, time) {
+      const g = e.g;
+      const sk = SKILLS[e.i];
+      const b = boards[p];
+      const count = b.skillCounts[sk.id];
+      const left = b.skillLeft[sk.id];
+      const active = left > 0;
+      g.clearRect(0, 0, 64, 64);
+      g.fillStyle = "#1f2a4d";
+      rrect(g, 1.5, 1.5, 61, 61, 10);
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = active ? "gold" : "#2d3a66";
+      g.stroke();
+      g.save();
+      g.globalAlpha = (count > 0 || active) ? 1 : 0.35;
+      drawSkillIcon(g, sk.id, time, 32, 30, 1.25);
+      g.restore();
+      g.fillStyle = "#aab";
+      g.font = "bold 12px Arial";
+      g.textAlign = "left";
+      g.textBaseline = "top";
+      g.fillText(KEYS[p].labels[e.i], 7, 6);
+      g.font = "bold 17px Arial";
+      g.textAlign = "right";
+      g.textBaseline = "bottom";
+      g.lineJoin = "round";
+      g.lineWidth = 4;
+      g.strokeStyle = "#16213e";
+      g.strokeText(String(count), 58, 55);
+      g.fillStyle = count > 0 ? "gold" : "#8892b0";
+      g.fillText(String(count), 58, 55);
+      if (active) {
+        g.fillStyle = "gold";
+        g.fillRect(8, 58, 48 * left / sk.duration, 3);
+      }
+    }
+
+    // ---- Flow ----
+    function showMenuScreen() {
+      phase = "menu";
+      paused = false;
+      $("menuScreen").classList.remove("hidden");
+      $("gameScreen").classList.add("hidden");
+    }
+
+    function startMatch() {
+      const sk = pickSkins();
+      const seed = (Date.now() % 100000) + 1;
+      if (!boards.length) {
+        boards = [
+          new Board({ canvas: $("cv0"), skin: sk[0], idx: 0, bgSeed: 7 }),
+          new Board({ canvas: $("cv1"), skin: sk[1], idx: 1, bgSeed: 7 })
+        ];
+      }
+      boards[0].skin = sk[0];
+      boards[1].skin = sk[1];
+      boards[0].reset(seed);
+      boards[1].reset(seed);
+      buildSkillBars();
+      levelIdx = 0;
+      result = null;
+      $("menuScreen").classList.add("hidden");
+      $("gameScreen").classList.remove("hidden");
+      $("resultBar").classList.add("hidden");
+      startLevel();
+    }
+
+    function startLevel() {
+      phase = "countdown";
+      countdownMs = 3000;
+      levelElapsed = 0;
+      ready = [false, false];
+      paused = false;
+      $("shop0").classList.add("hidden");
+      $("shop1").classList.add("hidden");
+      $("levelLabel").textContent = "Level " + (levelIdx + 1) + " / " + totalLevels;
+    }
+
+    // ms per step for the current moment of the level
+    function delayNow(b) {
+      const target = Math.max(70, BASE_DELAY - (levelIdx + 1) * 12);
+      const t = Math.max(0, Math.min(1, (levelElapsed - INTRO_MS) / RAMP_MS));
+      let d = BASE_DELAY + (target - BASE_DELAY) * t;
+      return d;
+    }
+
+    function endLevel() {
+      if (levelIdx >= totalLevels - 1) { finish("time"); return; }
+      phase = "shop";
+      ready = [false, false];
+      renderShop(0);
+      renderShop(1);
+      $("shop0").classList.remove("hidden");
+      $("shop1").classList.remove("hidden");
+    }
+
+    function finish(reason) {
+      const d0 = boards[0].dead, d1 = boards[1].dead;
+      const s0 = boards[0].score, s1 = boards[1].score;
+      let winner = -1;
+      let why = "";
+      if (d0 && !d1) { winner = 1; why = "Player 1 crashed into itself!"; }
+      else if (d1 && !d0) { winner = 0; why = "Player 2 crashed into itself!"; }
+      else if (d0 && d1) { why = "Both snakes crashed!"; winner = s0 > s1 ? 0 : s1 > s0 ? 1 : -1; }
+      else { why = "Time is up!"; winner = s0 > s1 ? 0 : s1 > s0 ? 1 : -1; }
+      result = { winner: winner, reason: why };
+      phase = "over";
+      const bar = $("resultBar");
+      const title = winner < 0 ? "It's a draw!" : "Player " + (winner + 1) + " wins!";
+      bar.innerHTML = '<div class="big">' + title + '</div><div class="why">' + why + '<br>Score: Player 1 = <b>' + s0 + '</b> &nbsp;|&nbsp; Player 2 = <b>' + s1 + '</b></div>' +
+        '<button class="actBtn" id="rematchBtn">Rematch (Space)</button><button class="actBtn alt" id="menuBtn2">Menu (M)</button>';
+      bar.classList.remove("hidden");
+      $("rematchBtn").addEventListener("click", startMatch);
+      $("menuBtn2").addEventListener("click", showMenuScreen);
+    }
+
+    function useSkill(p, i) {
+      if (phase !== "playing" || paused) return;
+      boards[p].useSkill(i);
+    }
+
+    function buy(p, i) {
+      if (phase !== "shop") return;
+      const b = boards[p];
+      const sk = SKILLS[i];
+      if (b.coins < sk.price) return;
+      b.coins -= sk.price;
+      b.skillCounts[sk.id]++;
+      renderShop(p);
+    }
+
+    function toggleReady(p) {
+      if (phase !== "shop") return;
+      ready[p] = !ready[p];
+      renderShop(p);
+      if (ready[0] && ready[1]) {
+        levelIdx++;
+        startLevel();
+      }
+    }
+
+    function renderShop(p) {
+      const el = $("shop" + p);
+      const b = boards[p];
+      el.innerHTML = "";
+      shopIcons = shopIcons.filter(e => e.p !== p);
+      const h = document.createElement("h3");
+      h.textContent = "Level " + (levelIdx + 1) + " complete!";
+      const sc = document.createElement("div");
+      sc.className = "sc";
+      sc.innerHTML = "Coins: <span class='gold'>" + b.coins + "</span> &nbsp;|&nbsp; Score: <b>" + b.score + "</b><br>Buy skills for the next level (it will be faster!)";
+      el.appendChild(h);
+      el.appendChild(sc);
+      SKILLS.forEach(function (sk, i) {
+        const row = document.createElement("div");
+        row.className = "shopRow";
+        row.title = sk.desc;
+        const cv = document.createElement("canvas");
+        cv.width = 48; cv.height = 48;
+        const info = document.createElement("div");
+        info.innerHTML = "<b>" + sk.name + "</b><small>" + sk.desc + " &nbsp;You own: " + b.skillCounts[sk.id] + " &nbsp;[Key " + KEYS[p].labels[i] + "]</small>";
+        const btn = document.createElement("button");
+        btn.className = "buy" + (b.coins < sk.price ? " cant" : "");
+        btn.textContent = "Buy " + sk.price;
+        btn.addEventListener("click", function () { buy(p, i); this.blur(); });
+        row.appendChild(cv);
+        row.appendChild(info);
+        row.appendChild(btn);
+        el.appendChild(row);
+        shopIcons.push({ p: p, id: sk.id, g: cv.getContext("2d") });
+      });
+      const rb = document.createElement("button");
+      rb.className = "readyBtn" + (ready[p] ? " on" : "");
+      rb.textContent = ready[p] ? "Ready! Waiting for the other player..." : "Continue (" + KEYS[p].ready + ")";
+      rb.addEventListener("click", function () { toggleReady(p); this.blur(); });
+      el.appendChild(rb);
+    }
+
+    // ---- Keyboard ----
+    document.addEventListener("keydown", function (e) {
+      const c = e.code;
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(c) && phase !== "menu") e.preventDefault();
+
+      if (phase === "menu") {
+        if ((c === "Enter" || c === "Space") && !(document.activeElement instanceof HTMLButtonElement)) startMatch();
+        return;
+      }
+      if (c === "KeyP" && (phase === "playing" || phase === "countdown")) { paused = !paused; return; }
+      if (c === "KeyM" && (phase === "over" || phase === "shop" || paused)) { showMenuScreen(); return; }
+
+      if (phase === "over") {
+        if (c === "Space" || c === "Enter") startMatch();
+        return;
+      }
+      if (phase === "shop") {
+        for (let p = 0; p < 2; p++) {
+          const i = KEYS[p].skills.indexOf(c);
+          if (i >= 0) buy(p, i);
+          if (c === KEYS[p].ready) toggleReady(p);
+        }
+        return;
+      }
+      if (paused) return;
+      for (let p = 0; p < 2; p++) {
+        const d = KEYS[p].dir[c];
+        if (d) boards[p].setDir(d[0], d[1]);
+        const i = KEYS[p].skills.indexOf(c);
+        if (i >= 0) useSkill(p, i);
+      }
+    });
+
+    $("startBtn").addEventListener("click", startMatch);
+
+    // ---- Main loop ----
+    function fmt(ms) {
+      const s = Math.max(0, Math.ceil(ms / 1000));
+      return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    }
+
+    function frame(time) {
+      const dt = Math.min(50, time - lastTime);
+      lastTime = time;
+      if (phase !== "menu" && boards.length) {
+        if (!paused) {
+          if (phase === "countdown") {
+            countdownMs -= dt;
+            if (countdownMs <= 0) phase = "playing";
+          } else if (phase === "playing") {
+            levelElapsed += dt;
+            for (let p = 0; p < 2; p++) boards[p].update(dt, delayNow(boards[p]));
+            if (boards[0].dead || boards[1].dead) finish("crash");
+            else if (levelElapsed >= LEVEL_MS) endLevel();
+          }
+        }
+        const rem = phase === "playing" || phase === "countdown" ? LEVEL_MS - levelElapsed : (phase === "shop" ? 0 : Math.max(0, LEVEL_MS - levelElapsed));
+        $("timer").textContent = fmt(rem);
+        $("timer").classList.toggle("low", rem < 10000 && rem > 0 && phase === "playing");
+
+        for (let p = 0; p < 2; p++) {
+          const b = boards[p];
+          let lines = null, big = 44;
+          if (paused) lines = ["Paused", "P = continue   M = menu"];
+          else if (phase === "countdown") { lines = [String(Math.ceil(countdownMs / 1000)), "Level " + (levelIdx + 1) + " - get ready!"]; big = 80; }
+          else if (phase === "over") {
+            if (result.winner === p) lines = ["WINNER!", "Score: " + b.score];
+            else if (result.winner < 0) lines = ["Draw", "Score: " + b.score];
+            else lines = [b.dead ? "Crashed!" : "You lost", "Score: " + b.score];
+          }
+          b.draw(time, lines, big);
+          $("score" + p).textContent = b.score;
+          $("coins" + p).textContent = b.coins;
+          for (const e of slots[p]) drawSlot(p, e, time);
+        }
+        if (phase === "shop") {
+          for (const e of shopIcons) {
+            e.g.clearRect(0, 0, 48, 48);
+            e.g.fillStyle = "#16213e";
+            rrect(e.g, 0, 0, 48, 48, 8);
+            e.g.fill();
+            drawSkillIcon(e.g, e.id, time, 24, 24, 0.95);
+          }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    showMenuScreen();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>

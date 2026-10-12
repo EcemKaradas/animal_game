@@ -1,0 +1,2836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rabbit Game</title>
+  <style>
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px 0;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+    }
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 804px;
+      max-width: 100%;
+    }
+    .hidden { display: none; }
+
+    canvas {
+      background: #16213e;
+      border: 3px solid #e94560;
+      border-radius: 8px;
+      max-width: 100%;
+      height: auto;
+    }
+    .gold { color: gold; font-weight: bold; }
+
+    /* ---- Menu ---- */
+    h1 {
+      margin: 0 0 10px;
+      font-size: 56px;
+      letter-spacing: 10px;
+      color: #e94560;
+    }
+    #previewLabel {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #aab;
+      height: 18px;
+    }
+    #menuStats {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    #menuHint {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #aab;
+    }
+    .bigBtn {
+      margin-top: 14px;
+      padding: 14px 48px;
+      font-size: 22px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .bigBtn:hover { background: #ff5c78; }
+
+    /* ---- Two panels, one under the other (top right) ---- */
+    #sidePanels {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      width: 400px;
+      max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel {
+      flex-shrink: 0;
+      background: #1b2444;
+      border: 2px solid #2d3a66;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    .panelHead {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: bold;
+      color: white;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .panelHead:hover { color: #ff8da0; }
+    .panelBody { padding: 0 12px 12px; }
+    .coinsLine { font-size: 14px; margin-bottom: 8px; }
+    #legend {
+      font-size: 12px;
+      color: #aab;
+      margin-bottom: 8px;
+    }
+    .msg {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 14px;
+      color: gold;
+      text-align: center;
+    }
+
+    /* Skin cards */
+    #shop, #accList {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .card {
+      font: inherit;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .card:hover { border-color: #e94560; }
+    .card.equipped { border-color: gold; }
+    .card.cant { opacity: 0.55; }
+    .card canvas.preview {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .card small {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: #aab;
+    }
+
+    /* Skill rows */
+    .skillRow {
+      display: grid;
+      grid-template-columns: 48px 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .skillRow canvas.skillPrev {
+      display: block;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+    }
+    .skillRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .buyBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .buyBtn:hover { background: #ff5c78; }
+    .buyBtn.cant { opacity: 0.5; }
+    .infoBtn {
+      width: 28px;
+      height: 28px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .infoBtn:hover { background: #3b4b85; }
+    .skillDesc {
+      grid-column: 1 / -1;
+      font-size: 13px;
+      color: #cdd5f0;
+      background: #16213e;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    /* Achievements */
+    .headRight { display: flex; align-items: center; }
+    .badge2 {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      border-radius: 10px;
+      background: #e94560;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge2.hidden { display: none; }
+    .achRow {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .achRow.ready { border-color: gold; }
+    .achRow.claimed { opacity: 0.6; }
+    .achIcon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2d3a66;
+      color: #8892b0;
+      font-size: 18px;
+    }
+    .achRow.ready .achIcon, .achRow.claimed .achIcon { background: gold; color: #7a5c00; }
+    .achRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .bar {
+      height: 6px;
+      margin-top: 6px;
+      background: #16213e;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar > div { height: 100%; background: #e94560; }
+    .achRow.ready .bar > div, .achRow.claimed .bar > div { background: gold; }
+    .claimBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: #3a2a00;
+      background: gold;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .claimBtn:hover { background: #ffe066; }
+    .achStatus {
+      font-size: 12px;
+      color: #aab;
+      text-align: right;
+    }
+    #toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 50;
+      max-width: min(280px, calc(100vw - 28px));
+      padding: 8px 12px;
+      font-size: 13px;
+      color: white;
+      background: rgba(27, 36, 68, 0.92);
+      border: 1px solid gold;
+      border-radius: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ---- Game ---- */
+    #skillBar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    canvas.skillIcon {
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+    #hud {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 800px;
+      max-width: 100%;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    #hud span { color: #e94560; font-weight: bold; }
+    #hud span.gold { color: gold; }
+    #overBtns {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .actBtn {
+      padding: 10px 22px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .actBtn:hover { background: #ff5c78; }
+    .actBtn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #restartBtn { background: #2d3a66; }
+    #restartBtn:hover { background: #3b4b85; }
+    #menuBtn {
+      margin-top: 12px;
+      padding: 8px 22px;
+      font-size: 15px;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #menuBtn:hover { background: #3b4b85; }
+    #hubLink { position: fixed; top: 10px; left: 10px; z-index: 50; padding: 6px 12px;
+      background: rgba(20,28,60,0.85); color: #cfe0ff; border: 1px solid #3b4b85; border-radius: 16px;
+      font: 600 13px Arial, sans-serif; text-decoration: none; }
+    #hubLink:hover { background: #3b4b85; }
+  </style>
+</head>
+<body>
+  <a id="hubLink" href="index.html">&larr; Animals</a>
+
+  <!-- ================= MENU SCREEN ================= -->
+  <div id="menuScreen" class="screen">
+
+    <div id="sidePanels">
+      <div class="panel">
+        <button id="skinsHead" class="panelHead"><span>Skins</span><span id="skinsArrow">&#9662;</span></button>
+        <div id="skinsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skinsCoins" class="gold">0</span></div>
+          <div id="legend"></div>
+          <div id="shop"></div>
+          <div id="skinMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="skillsHead" class="panelHead"><span>Skills</span><span id="skillsArrow">&#9662;</span></button>
+        <div id="skillsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skillsCoins" class="gold">0</span></div>
+          <div id="skillsLegend"></div>
+          <div id="skillList"></div>
+          <div id="skillMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="accHead" class="panelHead"><span>Accessories</span><span id="accArrow">&#9662;</span></button>
+        <div id="accBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="accCoins" class="gold">0</span></div>
+          <div style="font-size:12px;color:#aab;margin-bottom:8px;">Just for fun! Wear one item per spot (head, face, neck, body). Click an owned item to wear or remove it.</div>
+          <div id="accList"></div>
+          <div id="accMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="achHead" class="panelHead"><span>Achievements</span><span class="headRight"><span id="achBadge" class="badge2 hidden">0</span><span id="achArrow">&#9662;</span></span></button>
+        <div id="achBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="achCoins" class="gold">0</span> &nbsp;|&nbsp; <span id="achSummary"></span></div>
+          <button id="claimAll" class="claimBtn hidden" style="width:100%;margin-bottom:8px">Claim all</button>
+          <div id="achList"></div>
+          <div id="achMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <h1>RABBIT</h1>
+    <canvas id="menuCanvas" width="576" height="200"></canvas>
+    <div id="previewLabel"></div>
+
+    <div id="menuStats">
+      Coins: <span id="menuCoins" class="gold">0</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Best: <span id="menuBest" class="gold">0</span>
+    </div>
+
+    <button id="startBtn" class="bigBtn">Start Game</button>
+    <div id="menuHint">Up / Down = change lane, Space = jump (on a phone: swipe and tap). Open the panels (top right) for skins, skills and achievements.</div>
+  </div>
+
+  <!-- ================= GAME SCREEN ================= -->
+  <div id="gameScreen" class="screen hidden">
+    <div id="skillBar"></div>
+    <div id="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Level: <span id="level">1</span></div>
+      <div>Rank: <span id="rank">Baby Bunny</span></div>
+      <div>Distance: <span id="dist">0</span> m</div>
+      <div>Best: <span id="best">0</span></div>
+      <div>Coins: <span id="coins" class="gold">0</span></div>
+    </div>
+    <canvas id="game" width="800" height="520"></canvas>
+    <div id="overBtns">
+      <button id="continueBtn" class="actBtn" style="display:none">Continue</button>
+      <button id="restartBtn" class="actBtn" style="display:none">Play again</button>
+    </div>
+    <button id="menuBtn">Menu</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const menuCanvas = document.getElementById("menuCanvas");
+    const mctx = menuCanvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ---- World layout: one path, three lanes ----
+    const LANES = 3;
+    const LANE_TOP = 170;          // y where the path starts
+    const LANE_H = 100;            // height of one lane
+    const GROUND_BOTTOM = LANE_TOP + LANE_H * LANES;
+    const RX = 140;                // the rabbit always stays at this x
+    const GRAVITY = 1500;          // jump physics (pixels per second)
+    const JUMP_V = 600;            // jump speed: the rabbit rises about 113 px and stays in the air ~0.6 s
+
+    // ---- Settings (easy to tweak!) ----
+    const SPECIAL_EVERY = 8;       // a golden carrot appears after every 8 normal carrots
+    const POINTS_PER_LEVEL = 15;   // level up every 10 points
+    const COINS_PER_POINT = 1;     // 1 point = 1 coin
+    const POINTS = { carrot: 1, golden: 3 };
+    const CONTINUE_COSTS = [200, 300, 500];
+    const SLOW_FACTOR = 0.6;       // Slow Motion: the world moves at 60% speed
+    const MAGNET_RANGE = 260;      // Carrot Magnet: carrots within 260 px are pulled in
+    const PX_PER_METER = 60;
+    const RS = 0.75;             // how big the rabbit is
+    const OB_SCALE = 0.85;         // how big the obstacles are
+    const FOX_EXTRA = 100;         // a fox runs toward you faster than the ground moves
+
+    const ranks = ["Baby Bunny", "Meadow Hopper", "Carrot Fan", "Swift Hare", "Wind Runner", "Clover King", "Moon Rabbit", "Legend"];
+    const MAX_LEVEL = ranks.length;      // at this level every rabbit turns rainbow
+    const RAINBOW_AT = MAX_LEVEL - 0.4;
+
+    // Obstacle sizes: w = width, h = height (the rabbit must be higher than h to jump over it)
+    const OB = {
+      rock: { w: 44, h: 30 },
+      hole: { w: 76, h: 6 },
+      log:  { w: 92, h: 34 },
+      bush: { w: 56, h: 48 },
+      fox:  { w: 58, h: 40 },
+      hedgehog: { w: 40, h: 26 }
+    };
+    for (const k in OB) {
+      OB[k].w = Math.round(OB[k].w * OB_SCALE);
+      OB[k].h = Math.round(OB[k].h * OB_SCALE);
+    }
+
+    // ---- Rabbits in the shop ----
+    // fur = [hue, saturation %, lightness %]. breed = the shape: std (normal), lop (floppy ears),
+    // dutch (colored patches, patch = patch color) and fluffy (angora). The fur color never changes while you play.
+    const skins = [
+      { id: "white",  name: "Snow White",     price: 0,   breed: "std",    fur: [30, 10, 95] },
+      { id: "brown",  name: "Forest Brown",   price: 100, breed: "std",    fur: [28, 45, 42] },
+      { id: "gray",   name: "Misty Gray",     price: 100, breed: "std",    fur: [210, 10, 62] },
+      { id: "honey",  name: "Honey Lop",      price: 200, breed: "lop",    fur: [38, 55, 70] },
+      { id: "dutch",  name: "Dutch Rabbit",   price: 250, breed: "dutch",  fur: [40, 8, 96], patch: [250, 8, 22] },
+      { id: "angora", name: "Fluffy Angora",  price: 300, breed: "fluffy", fur: [280, 30, 92] },
+      { id: "rose",   name: "Rose Lop",       price: 300, breed: "lop",    fur: [340, 55, 82] },
+      { id: "night",  name: "Midnight",       price: 400, breed: "std",    fur: [250, 12, 24] }
+    ];
+
+    // ---- Accessories: only for fun. One item per spot (head, face, neck, body). ----
+    const accessories = [
+      { id: "bow",      name: "Ribbon Bow",     slot: "head", price: 40 },
+      { id: "strawhat", name: "Straw Hat",      slot: "head", price: 80 },
+      { id: "tophat",   name: "Top Hat",        slot: "head", price: 120 },
+      { id: "crown",    name: "Little Crown",   slot: "head", price: 200 },
+      { id: "glasses",  name: "Round Glasses",  slot: "face", price: 60 },
+      { id: "shades",   name: "Sunglasses",     slot: "face", price: 80 },
+      { id: "bowtie",   name: "Bow Tie",        slot: "neck", price: 40 },
+      { id: "scarf",    name: "Cozy Scarf",     slot: "neck", price: 50 },
+      { id: "dress",    name: "Cute Dress",     slot: "body", price: 150 }
+    ];
+
+    // ---- Skills: you buy them with coins, each purchase = one use. Press 1-6 in the game. ----
+    const skills = [
+      { id: "ghost",  name: "Ghost Hop",       price: 60, duration: 5000,
+        desc: "Your rabbit turns into a ghost for 5 seconds and runs straight through obstacles." },
+      { id: "slow",   name: "Slow Motion",     price: 40, duration: 6000,
+        desc: "Slows the world down for 6 seconds, so obstacles are easier to dodge." },
+      { id: "double", name: "Double Coins",    price: 80, duration: 15000,
+        desc: "Every carrot gives you twice the coins for 15 seconds. Your score stays the same." },
+      { id: "magnet", name: "Carrot Magnet",   price: 50, duration: 8000,
+        desc: "For 8 seconds, carrots that are close to your rabbit fly toward it." },
+      { id: "lucky",  name: "Golden Carrots",  price: 50, duration: 15000,
+        desc: "For 15 seconds, a golden carrot shows up with every group of carrots. One appears right away." },
+      { id: "shield", name: "Shield",          price: 150, duration: 60000,
+        desc: "A protective shield for 1 minute. If your rabbit would hit an obstacle, it smashes through and keeps running." }
+    ];
+
+    // ---- Saved data (the rabbit has its own coins, skins, skills and achievements) ----
+    let best = Number(localStorage.getItem("rabbitBest")) || 0;
+    let coins = Number(localStorage.getItem("rabbitCoins")) || 0;
+    let ownedSkins = ["white"];
+    try {
+      ownedSkins = JSON.parse(localStorage.getItem("rabbitOwned")) || ["white"];
+    } catch (e) {}
+    let equippedSkin = localStorage.getItem("rabbitSkin") || "white";
+    if (!skins.some(s => s.id === equippedSkin) || !ownedSkins.includes(equippedSkin)) equippedSkin = "white";
+
+    // Accessories you own, and the ones your rabbit is wearing right now
+    let ownedAcc = [];
+    let accOn = {};
+    try { ownedAcc = JSON.parse(localStorage.getItem("rabbitAcc")) || []; } catch (e) {}
+    try { accOn = JSON.parse(localStorage.getItem("rabbitAccOn")) || {}; } catch (e) {}
+    for (const slot of Object.keys(accOn)) {
+      const a = accessories.find(x => x.id === accOn[slot]);
+      if (!a || a.slot !== slot || !ownedAcc.includes(a.id)) delete accOn[slot];
+    }
+
+    let skillCounts = {};
+    try {
+      skillCounts = JSON.parse(localStorage.getItem("rabbitSkills")) || {};
+    } catch (e) {}
+    for (const sk of skills) {
+      if (typeof skillCounts[sk.id] !== "number") skillCounts[sk.id] = 0;
+    }
+
+    let stats = { totalScore: 0, carrots: 0, golden: 0, bestRun: 0, bestSurvive: 0, bestLevel: 1, bestDist: 0, continues: 0, skillsUsed: {} };
+    try {
+      const savedStats = JSON.parse(localStorage.getItem("rabbitStats"));
+      if (savedStats) stats = Object.assign(stats, savedStats);
+    } catch (e) {}
+    if (!stats.skillsUsed) stats.skillsUsed = {};
+
+    let achDone = {};
+    let achClaimed = {};
+    try { achDone = JSON.parse(localStorage.getItem("rabbitAchDone")) || {}; } catch (e) {}
+    try { achClaimed = JSON.parse(localStorage.getItem("rabbitAchClaimed")) || {}; } catch (e) {}
+
+    const ACH = [
+      { id: "firstcarrot", name: "First Carrot",    desc: "Collect your first carrot.",                  goal: 1,    reward: 5,   value: () => stats.carrots },
+      { id: "score100",  name: "Snack Time",        desc: "Collect 100 points in total.",                goal: 100,  reward: 10,  value: () => stats.totalScore },
+      { id: "score500",  name: "Hungry Bunny",      desc: "Collect 500 points in total.",                goal: 500,  reward: 50,  value: () => stats.totalScore },
+      { id: "score1000", name: "Carrot Feast",      desc: "Collect 1000 points in total.",               goal: 1000, reward: 100, value: () => stats.totalScore },
+      { id: "run50",     name: "Strong Run",        desc: "Score 50 points in a single game.",           goal: 50,   reward: 25,  value: () => stats.bestRun },
+      { id: "dist500",   name: "Long Hop",          desc: "Run 500 meters in a single game.",            goal: 500,  reward: 25,  unit: " m", value: () => Math.floor(stats.bestDist) },
+      { id: "dist2000",  name: "Marathon Bunny",    desc: "Run 2000 meters in a single game.",           goal: 2000, reward: 70,  unit: " m", value: () => Math.floor(stats.bestDist) },
+      { id: "live60",    name: "Staying Alive",     desc: "Play for 1 minute without crashing.",         goal: 60,   reward: 10,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live120",   name: "Steady Hopper",     desc: "Play for 2 minutes without crashing.",        goal: 120,  reward: 20,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live300",   name: "Unstoppable",       desc: "Play for 5 minutes without crashing.",        goal: 300,  reward: 60,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "level5",    name: "Growing Up",        desc: "Reach level 5.",                              goal: 5,    reward: 15,  value: () => stats.bestLevel },
+      { id: "level8",    name: "Legend Bunny",      desc: "Reach level 8.",             goal: 8,    reward: 40,  value: () => stats.bestLevel },
+      { id: "golden10",  name: "Golden Taste",      desc: "Collect 10 golden carrots.",                  goal: 10,   reward: 20,  value: () => stats.golden },
+      { id: "skills",    name: "Skill Master",      desc: "Use each of the 6 skills at least once.",     goal: 6,    reward: 30,  value: () => Object.keys(stats.skillsUsed).length },
+      { id: "fashion",   name: "Fashion Bunny",     desc: "Buy a new skin.",                             goal: 1,    reward: 15,  value: () => ownedSkins.length - 1 },
+      { id: "dress1",     name: "Dress Up",          desc: "Buy an accessory.",                           goal: 1,    reward: 15,  value: () => ownedAcc.length },
+      { id: "dress5",     name: "Fashion Star",      desc: "Own 5 accessories.",                          goal: 5,    reward: 40,  value: () => ownedAcc.length },
+      { id: "comeback",  name: "Second Chance",     desc: "Use Continue once.",                          goal: 1,    reward: 10,  value: () => stats.continues }
+    ];
+
+    // Saving can make the game stutter, so we only save at calm moments.
+    function saveAll() {
+      try {
+        localStorage.setItem("rabbitBest", best);
+        localStorage.setItem("rabbitCoins", coins);
+        localStorage.setItem("rabbitOwned", JSON.stringify(ownedSkins));
+        localStorage.setItem("rabbitSkin", equippedSkin);
+        localStorage.setItem("rabbitAcc", JSON.stringify(ownedAcc));
+        localStorage.setItem("rabbitAccOn", JSON.stringify(accOn));
+        localStorage.setItem("rabbitSkills", JSON.stringify(skillCounts));
+        localStorage.setItem("rabbitStats", JSON.stringify(stats));
+        localStorage.setItem("rabbitAchDone", JSON.stringify(achDone));
+        localStorage.setItem("rabbitAchClaimed", JSON.stringify(achClaimed));
+      } catch (e) {}
+    }
+    window.addEventListener("pagehide", saveAll);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) saveAll();
+    });
+
+    // ---- Game state ----
+    let screen = "menu";
+    let state;              // "ready", "playing", "continue" or "over"
+    let lane = 1, laneF = 1;          // target lane and the smooth (animated) lane
+    let z = 0, vz = 0;
+    let jumpBuf = 0;                  // a jump pressed a moment too early is remembered                // height above the ground and vertical speed
+    let items = [], obstacles = [], particles = [];
+    let score = 0, level = 1, eatenCount = 0, runCoins = 0, continuesUsed = 0;
+    let dist = 0, scroll = 0, runTime = 0, spawnGap = 0;
+    let goldenActive = false;
+    let invul = 0;                    // seconds of protection after a Continue
+    let dead = false;
+    let resumed = false;
+    let shownLevel = 1;
+    let shownStage = 0;               // which background we are in (0 ... 4, changes slowly)
+    let accOpen = false;
+    let accPreviews = [];
+    let surviveMs = 0;
+    let achTimer = 0;
+    let shieldFlashUntil = 0;
+    let levelUpUntil = 0;
+    let msgTimers = {};
+    let lastLabel = "";
+    let lastFrame = 0;
+    let lastDist = -1;
+
+    let skillLeft = {};
+    for (const sk of skills) skillLeft[sk.id] = 0;
+
+    let skinsOpen = false;
+    let skillsOpen = false;
+    let achOpen = false;
+    let skinPreviews = [];
+    let skillPreviews = [];
+    let skillSlots = [];
+    let infoOpen = {};
+
+    let toastQueue = [];
+    let toastBusy = false;
+
+    // ---- Colors ----
+    function getSkin() {
+      return skins.find(s => s.id === equippedSkin);
+    }
+
+    function hsl(c, dl) {
+      return "hsl(" + c[0] + "," + c[1] + "%," + Math.max(5, Math.min(97, c[2] + (dl || 0))) + "%)";
+    }
+
+    function furFor(skin) {
+      return {
+        breed: skin.breed,
+        base: hsl(skin.fur), light: hsl(skin.fur, 12), dark: hsl(skin.fur, -16),
+        patch: skin.patch ? hsl(skin.patch) : null
+      };
+    }
+
+    // Every level needs more points than the one before: 25, 60, 105, 160, 225, 300, 385 ...
+    function levelFor(sc) {
+      let lv = 1, need = 25, step = 25;
+      while (sc >= need) {
+        lv++;
+        step += 10;
+        need += step;
+      }
+      return lv;
+    }
+
+    function getRank() {
+      return ranks[Math.min(level - 1, ranks.length - 1)];
+    }
+
+    function getSpeed() {
+      const base = Math.min(470, 345 + (level - 1) * 18);
+      return skillLeft.slow > 0 ? base * SLOW_FACTOR : base;
+    }
+
+    function laneFeetY(l) {
+      return LANE_TOP + LANE_H * (l + 0.5) + 16;
+    }
+
+    function rrect(g, x, y, w, h, r) {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    function showScreen(name) {
+      screen = name;
+      document.getElementById("menuScreen").classList.toggle("hidden", name !== "menu");
+      document.getElementById("gameScreen").classList.toggle("hidden", name !== "game");
+    }
+
+    function startGame() {
+      setSkinsOpen(false);
+      setSkillsOpen(false);
+      setAchOpen(false);
+      setAccOpen(false);
+      showScreen("game");
+      resetGame();
+    }
+
+    function goMenu() {
+      saveAll();
+      showScreen("menu");
+      updateMenu();
+    }
+
+    function setState(s) {
+      state = s;
+      syncButtons();
+    }
+
+    function syncButtons() {
+      const cBtn = document.getElementById("continueBtn");
+      const rBtn = document.getElementById("restartBtn");
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        cBtn.style.display = "inline-block";
+        cBtn.textContent = "Continue (" + cost + " coins)";
+        cBtn.disabled = coins < cost;
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Give up";
+      } else if (state === "over") {
+        cBtn.style.display = "none";
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Play again";
+      } else {
+        cBtn.style.display = "none";
+        rBtn.style.display = "none";
+      }
+    }
+
+    // ---- Game setup ----
+    function resetGame() {
+      lane = 1; laneF = 1;
+      z = 0; vz = 0;
+      items = []; obstacles = []; particles = [];
+      score = 0; level = 1; shownLevel = 1; shownStage = 0;
+      eatenCount = 0; runCoins = 0; continuesUsed = 0;
+      dist = 0; scroll = 0; runTime = 0; spawnGap = 260;
+      goldenActive = false;
+      invul = 0; dead = false; resumed = false;
+      surviveMs = 0;
+      for (const sk of skills) skillLeft[sk.id] = 0;
+      setState("ready");
+      updateHud();
+    }
+
+    function updateHud() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("level").textContent = level;
+      document.getElementById("rank").textContent = getRank();
+      document.getElementById("best").textContent = best;
+      document.getElementById("coins").textContent = coins;
+      document.getElementById("dist").textContent = Math.floor(dist);
+    }
+
+    function updateMenu() {
+      document.getElementById("menuCoins").textContent = coins;
+      document.getElementById("menuBest").textContent = best;
+      document.getElementById("skinsCoins").textContent = coins;
+      document.getElementById("skillsCoins").textContent = coins;
+      renderShop();
+      renderSkillShop();
+      renderAccessories();
+      document.getElementById("accCoins").textContent = coins;
+      renderAchievements();
+    }
+
+    function addScore(points) {
+      score += points;
+      const gain = points * COINS_PER_POINT * (skillLeft.double > 0 ? 2 : 1);
+      coins += gain;
+      runCoins += gain;
+
+      const newLevel = levelFor(score);
+      if (newLevel > level) {
+        level = newLevel;
+        levelUpUntil = performance.now() + 1800;
+      }
+      if (score > best) best = score;
+
+      stats.totalScore += points;
+      if (score > stats.bestRun) stats.bestRun = score;
+      if (level > stats.bestLevel) stats.bestLevel = level;
+      checkAchievements();
+
+      updateHud();
+      return gain;
+    }
+
+    // ---- Skills in the game ----
+    function useSkill(i) {
+      if (screen !== "game" || state !== "playing") return;
+      const sk = skills[i];
+      if (!sk) return;
+      if (skillCounts[sk.id] <= 0) return;
+      if (skillLeft[sk.id] > 0) return;
+      skillCounts[sk.id]--;
+      skillLeft[sk.id] = sk.duration;
+      stats.skillsUsed[sk.id] = true;
+      checkAchievements();
+      if (sk.id === "lucky" && !goldenActive) {
+        goldenActive = true;
+        addItem("golden", Math.floor(Math.random() * LANES), W + 40, 16);
+      }
+    }
+
+    function unclaimedCount() {
+      return ACH.filter(a => achDone[a.id] && !achClaimed[a.id]).length;
+    }
+
+    function updateBadge() {
+      const n = unclaimedCount();
+      const el = document.getElementById("achBadge");
+      el.textContent = n;
+      el.classList.toggle("hidden", n === 0);
+    }
+
+    function showToast(text) {
+      toastQueue.push(text);
+      if (!toastBusy) nextToast();
+    }
+
+    function nextToast() {
+      const el = document.getElementById("toast");
+      if (!toastQueue.length) {
+        toastBusy = false;
+        return;
+      }
+      toastBusy = true;
+      el.textContent = toastQueue.shift();
+      el.classList.add("show");
+      setTimeout(function () {
+        el.classList.remove("show");
+        setTimeout(nextToast, 400);
+      }, 3200);
+    }
+
+    function checkAchievements() {
+      let changed = false;
+      for (const a of ACH) {
+        if (!achDone[a.id] && a.value() >= a.goal) {
+          achDone[a.id] = true;
+          changed = true;
+          showToast("Achievement: " + a.name + " (+" + a.reward + " coins to claim)");
+        }
+      }
+      if (changed) updateBadge();
+    }
+
+    function claimAch(a) {
+      if (!achDone[a.id] || achClaimed[a.id]) return;
+      achClaimed[a.id] = true;
+      coins += a.reward;
+      showMsg("achMsg", "+" + a.reward + " coins! (" + a.name + ")");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function claimAllAch() {
+      let total = 0;
+      for (const a of ACH) {
+        if (achDone[a.id] && !achClaimed[a.id]) {
+          achClaimed[a.id] = true;
+          coins += a.reward;
+          total += a.reward;
+        }
+      }
+      if (total > 0) showMsg("achMsg", "+" + total + " coins!");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderAchievements() {
+      const list = document.getElementById("achList");
+      list.innerHTML = "";
+
+      const doneCount = ACH.filter(a => achDone[a.id]).length;
+      document.getElementById("achSummary").textContent = "Earned " + doneCount + " of " + ACH.length;
+      document.getElementById("achCoins").textContent = coins;
+
+      const waiting = unclaimedCount();
+      const allBtn = document.getElementById("claimAll");
+      allBtn.classList.toggle("hidden", waiting < 2);
+      allBtn.textContent = "Claim all (" + waiting + ")";
+
+      // Rewards to claim first, then the ones still to earn, then the ones already claimed
+      const rank = a => (achDone[a.id] && !achClaimed[a.id]) ? 0 : (achClaimed[a.id] ? 2 : 1);
+      const sorted = ACH.map((a, i) => ({ a: a, i: i }))
+                        .sort((p, q) => rank(p.a) - rank(q.a) || p.i - q.i)
+                        .map(p => p.a);
+
+      for (const a of sorted) {
+        const done = !!achDone[a.id];
+        const claimed = !!achClaimed[a.id];
+        const unit = a.unit || "";
+        const shown = done ? a.goal : Math.min(a.value(), a.goal);
+
+        const row = document.createElement("div");
+        row.className = "achRow" + (done && !claimed ? " ready" : "") + (claimed ? " claimed" : "");
+
+        const icon = document.createElement("div");
+        icon.className = "achIcon";
+        icon.textContent = done ? "★" : "☆";
+
+        const mid = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = a.name;
+        const desc = document.createElement("small");
+        desc.textContent = a.desc;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("div");
+        fill.style.width = Math.round(100 * shown / a.goal) + "%";
+        bar.appendChild(fill);
+        const prog = document.createElement("small");
+        prog.textContent = shown + " / " + a.goal + unit + "  -  Reward: " + a.reward + " coins";
+        mid.appendChild(name);
+        mid.appendChild(desc);
+        mid.appendChild(bar);
+        mid.appendChild(prog);
+
+        row.appendChild(icon);
+        row.appendChild(mid);
+
+        if (done && !claimed) {
+          const btn = document.createElement("button");
+          btn.className = "claimBtn";
+          btn.textContent = "Claim +" + a.reward;
+          btn.addEventListener("click", function () { claimAch(a); });
+          row.appendChild(btn);
+        } else {
+          const st = document.createElement("div");
+          st.className = "achStatus";
+          st.textContent = claimed ? "Claimed" : "";
+          row.appendChild(st);
+        }
+
+        list.appendChild(row);
+      }
+
+      updateBadge();
+    }
+
+    function setAchOpen(v) {
+      achOpen = v;
+      document.getElementById("achBody").classList.toggle("hidden", !v);
+      document.getElementById("achArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderAchievements();
+    }
+
+    // ---- Crash and Continue? ----
+    function onCrash() {
+      dead = true;
+      vz = 0;
+      saveAll();
+      if (continuesUsed < CONTINUE_COSTS.length) setState("continue");
+      else setState("over");
+    }
+
+    function doContinue() {
+      if (state !== "continue") return;
+      const cost = CONTINUE_COSTS[continuesUsed];
+      if (cost === undefined || coins < cost) return;
+
+      coins -= cost;
+      continuesUsed++;
+      stats.continues++;
+      surviveMs = 0;
+      checkAchievements();
+      saveAll();
+
+      // Clear the way ahead and give a short protection time
+      obstacles = obstacles.filter(o => o.x < RX - 60 || o.x > RX + 560);
+      dead = false;
+      z = 0; vz = 0;
+      invul = 2.2;
+      resumed = true;
+      setState("ready");
+      updateHud();
+    }
+
+    function giveUp() {
+      if (state !== "continue") return;
+      setState("over");
+    }
+
+    function showMsg(id, text) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      clearTimeout(msgTimers[id]);
+      msgTimers[id] = setTimeout(function () { el.textContent = ""; }, 2500);
+    }
+
+    function setSkinsOpen(v) {
+      skinsOpen = v;
+      document.getElementById("skinsBody").classList.toggle("hidden", !v);
+      document.getElementById("skinsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderShop();
+    }
+
+    function setSkillsOpen(v) {
+      skillsOpen = v;
+      document.getElementById("skillsBody").classList.toggle("hidden", !v);
+      document.getElementById("skillsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderSkillShop();
+    }
+
+    function onSkinClick(skin) {
+      if (ownedSkins.includes(skin.id)) {
+        equippedSkin = skin.id;
+        showMsg("skinMsg", skin.name + " equipped!");
+      } else if (coins >= skin.price) {
+        coins -= skin.price;
+        ownedSkins.push(skin.id);
+        checkAchievements();
+        equippedSkin = skin.id;
+        showMsg("skinMsg", "You bought " + skin.name + "!");
+      } else {
+        showMsg("skinMsg", "Not enough coins. You need " + (skin.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function onBuySkill(sk) {
+      if (coins >= sk.price) {
+        coins -= sk.price;
+        skillCounts[sk.id]++;
+        showMsg("skillMsg", "You bought " + sk.name + "! You own " + skillCounts[sk.id] + ".");
+      } else {
+        showMsg("skillMsg", "Not enough coins. You need " + (sk.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderShop() {
+      const shop = document.getElementById("shop");
+      shop.innerHTML = "";
+      skinPreviews = [];
+
+      skins.forEach(function (skin, idx) {
+        const owned = ownedSkins.includes(skin.id);
+        const equipped = equippedSkin === skin.id;
+
+        const card = document.createElement("button");
+        card.className = "card" + (equipped ? " equipped" : "") +
+                         (!owned && coins < skin.price ? " cant" : "");
+
+        const cv = document.createElement("canvas");
+        cv.className = "preview";
+        cv.width = 180;
+        cv.height = 46;
+
+        const name = document.createElement("div");
+        name.textContent = skin.name;
+        name.style.fontWeight = "bold";
+
+        const status = document.createElement("small");
+        if (equipped) status.textContent = "Equipped";
+        else if (owned) status.textContent = "Click to equip";
+        else if (skin.price === 0) status.textContent = "Free";
+        else status.textContent = skin.price + " coins";
+
+        card.appendChild(cv);
+        card.appendChild(name);
+        card.appendChild(status);
+        card.addEventListener("click", function () { onSkinClick(skin); });
+        shop.appendChild(card);
+
+        skinPreviews.push({ skin: skin, idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function renderSkillShop() {
+      const list = document.getElementById("skillList");
+      list.innerHTML = "";
+      skillPreviews = [];
+
+      skills.forEach(function (sk, idx) {
+        const row = document.createElement("div");
+        row.className = "skillRow";
+
+        const cv = document.createElement("canvas");
+        cv.className = "skillPrev";
+        cv.width = 48;
+        cv.height = 48;
+
+        const info = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = sk.name;
+        const sub = document.createElement("small");
+        sub.textContent = "You own: " + skillCounts[sk.id] + "  -  Key " + (idx + 1);
+        info.appendChild(name);
+        info.appendChild(sub);
+
+        const buy = document.createElement("button");
+        buy.className = "buyBtn" + (coins < sk.price ? " cant" : "");
+        buy.textContent = "Buy " + sk.price;
+        buy.addEventListener("click", function () { onBuySkill(sk); });
+
+        const i = document.createElement("button");
+        i.className = "infoBtn";
+        i.textContent = "i";
+        i.title = "What does it do?";
+
+        const desc = document.createElement("div");
+        desc.className = "skillDesc" + (infoOpen[sk.id] ? "" : " hidden");
+        desc.textContent = sk.desc;
+
+        i.addEventListener("click", function () {
+          infoOpen[sk.id] = !infoOpen[sk.id];
+          desc.classList.toggle("hidden", !infoOpen[sk.id]);
+          i.blur();
+        });
+
+        row.appendChild(cv);
+        row.appendChild(info);
+        row.appendChild(buy);
+        row.appendChild(i);
+        row.appendChild(desc);
+        list.appendChild(row);
+
+        skillPreviews.push({ skill: sk, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function buildSkillBar() {
+      const bar = document.getElementById("skillBar");
+      bar.innerHTML = "";
+      skillSlots = [];
+      skills.forEach(function (sk, idx) {
+        const cv = document.createElement("canvas");
+        cv.className = "skillIcon";
+        cv.width = 64;
+        cv.height = 64;
+        cv.title = sk.name + " (key " + (idx + 1) + ")";
+        cv.addEventListener("click", function () { useSkill(idx); });
+        bar.appendChild(cv);
+        skillSlots.push({ idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    document.getElementById("legend").textContent =
+      "Carrot " + POINTS.carrot + " pt - Golden carrot " + POINTS.golden +
+      " pts. 1 point = " + COINS_PER_POINT + " coin.";
+    document.getElementById("skillsLegend").textContent =
+      "Each purchase gives you one use. In the game, press 1-6 (or tap the icon).";
+    document.getElementById("skillsLegend").style.cssText = "font-size:12px;color:#aab;margin-bottom:8px;";
+
+    document.getElementById("skinsHead").addEventListener("click", function () {
+      this.blur();
+      setSkinsOpen(!skinsOpen);
+    });
+    document.getElementById("skillsHead").addEventListener("click", function () {
+      this.blur();
+      setSkillsOpen(!skillsOpen);
+    });
+    document.getElementById("accHead").addEventListener("click", function () {
+      this.blur();
+      setAccOpen(!accOpen);
+    });
+    document.getElementById("achHead").addEventListener("click", function () {
+      this.blur();
+      setAchOpen(!achOpen);
+    });
+    document.getElementById("claimAll").addEventListener("click", claimAllAch);
+    document.getElementById("startBtn").addEventListener("click", function () {
+      this.blur();
+      startGame();
+    });
+    document.getElementById("menuBtn").addEventListener("click", function () {
+      this.blur();
+      goMenu();
+    });
+    document.getElementById("continueBtn").addEventListener("click", function () {
+      this.blur();
+      doContinue();
+    });
+    document.getElementById("restartBtn").addEventListener("click", function () {
+      this.blur();
+      if (state === "continue") giveUp();
+      else if (state === "over") resetGame();
+    });
+
+    // ---- Controls ----
+    function startRun() {
+      if (state === "ready") {
+        resumed = false;
+        setState("playing");
+      }
+    }
+
+    function changeLane(d) {
+      if (screen !== "game") return;
+      startRun();
+      if (state !== "playing") return;
+      lane = Math.max(0, Math.min(LANES - 1, lane + d));
+    }
+
+    function jump() {
+      if (screen !== "game") return;
+      startRun();
+      if (state !== "playing") return;
+      if (z <= 2) { vz = JUMP_V; z = 0.01; jumpBuf = 0; }
+      else if (z < 70 && vz < 0) jumpBuf = 0.18;
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (screen === "menu") {
+        if (event.key === "Escape" && (skinsOpen || skillsOpen || achOpen || accOpen)) {
+          setAccOpen(false);
+          setSkinsOpen(false);
+          setSkillsOpen(false);
+          setAchOpen(false);
+          return;
+        }
+        const onButton = document.activeElement instanceof HTMLButtonElement;
+        if (event.key === "Enter" && !onButton) startGame();
+        return;
+      }
+
+      const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "];
+      if (keys.includes(event.key)) event.preventDefault();
+
+      if (/^[1-6]$/.test(event.key)) {
+        useSkill(Number(event.key) - 1);
+        return;
+      }
+
+      if ((event.key === "m" || event.key === "M" || event.key === "Escape") && state !== "playing") {
+        goMenu();
+        return;
+      }
+
+      if (state === "continue") {
+        if (event.key === "c" || event.key === "C") doContinue();
+        if (event.key === " ") giveUp();
+        return;
+      }
+
+      if (state === "over") {
+        if (event.key === " ") resetGame();
+        return;
+      }
+
+      if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") changeLane(-1);
+      else if (event.key === "ArrowDown" || event.key === "s" || event.key === "S") changeLane(1);
+      else if (event.key === " " || event.key === "ArrowRight") jump();
+    });
+
+    // Touch and mouse: swipe up / down = change lane, tap = jump
+    (function () {
+      let sy = null, moved = false;
+      canvas.style.touchAction = "none";
+      canvas.addEventListener("pointerdown", function (e) {
+        sy = e.clientY; moved = false;
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      });
+      canvas.addEventListener("pointermove", function (e) {
+        if (sy === null) return;
+        const d = e.clientY - sy;
+        if (Math.abs(d) > 30) {
+          changeLane(d < 0 ? -1 : 1);
+          sy = e.clientY;
+          moved = true;
+        }
+      });
+      canvas.addEventListener("pointerup", function () {
+        if (sy !== null && !moved && (state === "ready" || state === "playing")) jump();
+        sy = null;
+      });
+      canvas.addEventListener("pointercancel", function () { sy = null; });
+    })();
+
+    // ---- Spawning ----
+    function addItem(type, l, x, zz) {
+      items.push({ type: type, x: x, ly: l, z: zz, phase: Math.random() * 6 });
+    }
+
+    function addObstacle(type, l, x) {
+      const d = OB[type];
+      obstacles.push({ type: type, lane: l, x: x, w: d.w, h: d.h, seed: Math.random() * 6 });
+    }
+
+    // Carrots that follow the path of a jump over an obstacle at x. They are placed using the real jump physics
+    // and the current speed, so a normal jump over the obstacle collects them.
+    function addArc(l, x, n) {
+      const sp = getSpeed();
+      const T = 2 * JUMP_V / GRAVITY;
+      const fr = n === 3 ? [0.28, 0.5, 0.72] : [0.2, 0.4, 0.6, 0.8];
+      for (const f of fr) {
+        const t = f * T;
+        const h = JUMP_V * t - GRAVITY * t * t / 2;
+        addItem("carrot", l, x + sp * (t - T / 2), h * 0.85 + 16);
+      }
+    }
+
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    // New enemies show up as you level up (and the background changes with them)
+    function allowedObstacles() {
+      const a = ["rock", "hole", "log"];
+      if (level >= 2) a.push("fox");
+      if (level >= 3) a.push("bush", "hedgehog");
+      return a;
+    }
+
+    function spawnPattern() {
+      const base = W + 80;
+      const any = allowedObstacles();
+      const low = any.filter(t => t !== "fox");
+      const lanes = [0, 1, 2];
+      const L = pick(lanes);
+      const others = lanes.filter(l => l !== L);
+      let gap = Math.max(450, 610 - level * 15) + Math.random() * 170;
+
+      const kinds = ["single", "single", "jump", "jump", "trail", "rest"];
+      if (level >= 2) kinds.push("double", "double");
+      if (level >= 4) kinds.push("wall");
+      if (level >= 5) kinds.push("foxes");
+      const kind = pick(kinds);
+
+      if (kind === "single") {
+        addObstacle(pick(any), L, base);
+        const M = pick(others);
+        for (let i = 0; i < 2; i++) addItem("carrot", M, base - 30 + i * 60, 14);
+      } else if (kind === "rest") {
+        addObstacle(pick(any), L, base);
+      } else if (kind === "double") {
+        const open = pick(lanes);
+        for (const l of lanes) if (l !== open) addObstacle(pick(any), l, base);
+        for (let i = 0; i < 3; i++) addItem("carrot", open, base - 60 + i * 60, 14);
+      } else if (kind === "foxes") {
+        const open = pick(lanes);
+        for (const l of lanes) if (l !== open) addObstacle("fox", l, base);
+        for (let i = 0; i < 3; i++) addItem("carrot", open, base - 60 + i * 60, 14);
+      } else if (kind === "jump") {
+        addObstacle(pick(low), L, base);
+        addArc(L, base, 3);
+      } else if (kind === "wall") {
+        for (const l of lanes) addObstacle(pick(low), l, base);
+        addArc(1, base, 3);
+      } else {
+        const M = pick(others);
+        for (let i = 0; i < 4; i++) addItem("carrot", i < 2 ? L : M, base + i * 70, 14);
+        gap = 380;
+      }
+
+      // The golden carrot: only one at a time, and a new one only after the last one is gone
+      if (!goldenActive && (skillLeft.lucky > 0 || eatenCount >= SPECIAL_EVERY)) {
+        goldenActive = true;
+        eatenCount = 0;
+        addItem("golden", pick(lanes), base + 300, 16);
+      }
+
+      spawnGap = gap;
+    }
+
+    // ---- Particles ----
+    function burst(x, y, color, n) {
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 60 + Math.random() * 160;
+        particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 0.5 + Math.random() * 0.3, max: 0.8, color: color });
+      }
+    }
+
+    function floatText(x, y, text, color) {
+      particles.push({ x: x, y: y, vx: 0, vy: -50, life: 0.9, max: 0.9, color: color, text: text });
+    }
+
+    function updateParticles(dt) {
+      for (const p of particles) {
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (!p.text) p.vy += 500 * dt;
+      }
+      particles = particles.filter(p => p.life > 0);
+    }
+
+    // ---- Game logic ----
+    function collect(it) {
+      const y = laneFeetY(it.ly) - it.z;
+      if (it.type === "golden") {
+        stats.golden++;
+        goldenActive = false;
+        const g = addScore(POINTS.golden);
+        burst(it.x, y, "#ffd54a", 14);
+        floatText(it.x, y - 14, "+" + g, "#ffd54a");
+      } else {
+        stats.carrots++;
+        eatenCount++;
+        const g = addScore(POINTS.carrot);
+        burst(it.x, y, "#ff9a3c", 7);
+        floatText(it.x, y - 14, "+" + g, "#ffb86b");
+      }
+    }
+
+    function smash(o) {
+      const y = laneFeetY(o.lane) - o.h / 2;
+      burst(o.x, y, "#8fd3ff", 16);
+      shieldFlashUntil = performance.now() + 450;
+      obstacles.splice(obstacles.indexOf(o), 1);
+    }
+
+    function update(dt) {
+      const sp = getSpeed();
+      dist += sp * dt / PX_PER_METER;
+      if (dist > stats.bestDist) stats.bestDist = dist;
+      scroll += sp * dt;
+      laneF += (lane - laneF) * Math.min(1, dt * 14);
+
+      if (z > 0 || vz > 0) {
+        vz -= GRAVITY * dt;
+        z += vz * dt;
+        if (z <= 0) {
+          z = 0; vz = 0;
+          if (jumpBuf > 0) { vz = JUMP_V; z = 0.01; jumpBuf = 0; }
+        }
+      } else {
+        runTime += dt;
+      }
+      if (invul > 0) invul -= dt;
+      if (jumpBuf > 0) jumpBuf -= dt;
+
+      spawnGap -= sp * dt;
+      if (spawnGap <= 0) spawnPattern();
+
+      const slowMul = skillLeft.slow > 0 ? SLOW_FACTOR : 1;
+      for (const o of obstacles) {
+        o.x -= (sp + (o.type === "fox" ? FOX_EXTRA * slowMul : 0)) * dt;
+      }
+
+      // Items: scroll, get pulled by the magnet, get collected
+      for (const it of items) {
+        it.x -= sp * dt;
+        if (skillLeft.magnet > 0 && it.x > RX - 50 && Math.abs(it.x - RX) < MAGNET_RANGE) {
+          const k = Math.min(1, dt * 7);
+          it.x += (RX - it.x) * k;
+          it.ly += (laneF - it.ly) * k;
+          it.z += (z + 16 - it.z) * k;
+        }
+      }
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        if (Math.abs(it.ly - laneF) < 0.5 && Math.abs(it.x - RX) < 28 && Math.abs(it.z - (z + 16)) < 38) {
+          items.splice(i, 1);
+          collect(it);
+        } else if (it.x < -60) {
+          if (it.type === "golden") goldenActive = false;
+          items.splice(i, 1);
+        }
+      }
+
+      // Obstacles: collide or leave the screen
+      const ghost = skillLeft.ghost > 0;
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const o = obstacles[i];
+        if (o.x < -140) { obstacles.splice(i, 1); continue; }
+        if (ghost || invul > 0) continue;
+        if (Math.abs(laneF - o.lane) < 0.55 && Math.abs(o.x - RX) < o.w / 2 + 6 && z < o.h - 3) {
+          if (skillLeft.shield > 0) {
+            smash(o);
+          } else {
+            onCrash();
+            return;
+          }
+        }
+      }
+    }
+
+    // ---- Drawing: the rabbit ----
+    function ell(g, x, y, rx, ry, rot) {
+      g.beginPath();
+      g.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+    }
+
+    // fill + soft outline (so a white rabbit is also visible on a light background)
+    function fo(g) {
+      g.fill();
+      g.stroke();
+    }
+
+    // A fluffy shape: lots of little round bumps around an ellipse
+    function fluff(g, cx, cy, rx, ry, n, r) {
+      for (let a = 0; a < n; a++) {
+        const t = a / n * Math.PI * 2;
+        ell(g, cx + Math.cos(t) * rx, cy + Math.sin(t) * ry, r, r);
+        fo(g);
+      }
+      ell(g, cx, cy, rx, ry);
+      g.fill();
+    }
+
+    function drawEar(g, fur, bx, by, rot, far, o, ph) {
+      g.save();
+      g.translate(bx, by);
+      if (fur.breed === "lop") {
+        const wob = (o.airborne ? -0.3 : 0) + Math.sin(ph * 9) * 0.08 * (o.running ? 1 : 0);
+        g.rotate(Math.PI + 0.3 + wob);
+        g.fillStyle = far ? fur.dark : fur.base;
+        ell(g, 0, -13, 7.5, 15);
+        fo(g);
+        if (!far) {
+          g.fillStyle = "#f7b6c2";
+          ell(g, 0, -12, 3.6, 10);
+          g.fill();
+        }
+      } else {
+        g.rotate(rot);
+        const long = fur.breed === "fluffy" ? 13 : 15;
+        const wide = fur.breed === "fluffy" ? 7.5 : 6.2;
+        g.fillStyle = far ? fur.dark : (fur.breed === "dutch" && fur.patch ? fur.patch : fur.base);
+        ell(g, 0, -long + 1, wide, long);
+        fo(g);
+        if (!far) {
+          g.fillStyle = "#f7b6c2";
+          ell(g, 0, -long + 2, wide * 0.5, long - 4);
+          g.fill();
+          g.fillStyle = "#fbd3dc";
+          ell(g, -0.5, -long, wide * 0.22, long - 8);
+          g.fill();
+        }
+        if (fur.breed === "fluffy") {
+          g.fillStyle = fur.light;
+          for (const t of [-3.5, 0, 3.5]) { ell(g, t, -long * 2 + 2, 3, 3.4); fo(g); }
+        }
+      }
+      g.restore();
+    }
+
+    function drawHeadAcc(g, id) {
+      if (id === "bow") {
+        g.fillStyle = "#ff6f9c";
+        ell(g, 7, -47, 6, 4, -0.35); fo(g);
+        ell(g, 19, -47, 6, 4, 0.35); fo(g);
+        g.fillStyle = "#e5457a";
+        ell(g, 13, -47, 2.8, 2.8); fo(g);
+      } else if (id === "strawhat") {
+        g.fillStyle = "#e3c06b";
+        ell(g, 21, -46, 19, 4.2, -0.05); fo(g);
+        g.fillStyle = "#f0d58a";
+        g.beginPath();
+        g.ellipse(21, -47, 10, 9, 0, Math.PI, 0);
+        g.closePath(); fo(g);
+        g.fillStyle = "#d9534f";
+        g.fillRect(11, -49, 20, 3.2);
+      } else if (id === "tophat") {
+        g.fillStyle = "#2b2b3a";
+        ell(g, 21, -46, 14, 3.2); fo(g);
+        g.fillRect(15, -64, 12, 18);
+        g.strokeRect(15, -64, 12, 18);
+        ell(g, 21, -64, 6, 2); fo(g);
+        g.fillStyle = "#c0392b";
+        g.fillRect(15, -52, 12, 4);
+      } else if (id === "crown") {
+        g.fillStyle = "#ffcf3a";
+        g.beginPath();
+        g.moveTo(12, -46); g.lineTo(12, -56); g.lineTo(16.5, -51); g.lineTo(21, -58);
+        g.lineTo(25.5, -51); g.lineTo(30, -56); g.lineTo(30, -46);
+        g.closePath(); fo(g);
+        g.fillStyle = "#e0566b";
+        ell(g, 21, -50, 1.8, 1.8); g.fill();
+      }
+    }
+
+    function drawNeckAcc(g, id) {
+      if (id === "bowtie") {
+        g.fillStyle = "#d63c5b";
+        g.beginPath();
+        g.moveTo(14, -27); g.lineTo(5, -33); g.lineTo(5, -21);
+        g.closePath(); fo(g);
+        g.beginPath();
+        g.moveTo(14, -27); g.lineTo(23, -33); g.lineTo(23, -21);
+        g.closePath(); fo(g);
+        g.fillStyle = "#a82843";
+        ell(g, 14, -27, 3, 3); fo(g);
+      } else if (id === "scarf") {
+        g.fillStyle = "#e0566b";
+        g.save();
+        g.translate(13, -29);
+        g.rotate(0.35);
+        rrect(g, -8, -5, 16, 10, 4);
+        fo(g);
+        g.fillStyle = "#f7a1b0";
+        g.fillRect(-2, -5, 3, 10);
+        g.restore();
+        g.fillStyle = "#e0566b";
+        rrect(g, 3, -27, 6, 14, 2);
+        fo(g);
+      }
+    }
+
+    function drawFaceAcc(g, id) {
+      if (id === "glasses") {
+        g.save();
+        g.strokeStyle = "#2a2a3a";
+        g.lineWidth = 1.8;
+        g.fillStyle = "rgba(200,230,255,0.35)";
+        ell(g, 29, -39, 6, 6);
+        g.fill(); g.stroke();
+        g.beginPath();
+        g.moveTo(23, -40); g.lineTo(14, -42);
+        g.moveTo(35, -38.5); g.lineTo(37, -37.5);
+        g.stroke();
+        g.restore();
+      } else if (id === "shades") {
+        g.save();
+        g.strokeStyle = "#111";
+        g.lineWidth = 1.8;
+        g.fillStyle = "#1c1c28";
+        ell(g, 29, -39, 6.5, 5);
+        g.fill(); g.stroke();
+        g.beginPath();
+        g.moveTo(22.5, -40); g.lineTo(14, -42);
+        g.stroke();
+        g.fillStyle = "rgba(255,255,255,0.5)";
+        ell(g, 27, -41, 2, 1);
+        g.fill();
+        g.restore();
+      }
+    }
+
+    // The rabbit looks to the right. (x, fy) = the middle of its feet on the ground.
+    // o: scale, phase, running, dead, alpha, vz, acc (accessories worn: {head, face, neck, body})
+    function drawRabbit(g, x, fy, zz, skin, time, o) {
+      const s = o.scale || 1;
+      const fur = furFor(skin);
+      const breed = fur.breed;
+      const acc = o.acc || {};
+      const ph = o.phase || 0;
+      const run = o.running && zz <= 0;
+      const dutch = breed === "dutch" && fur.patch;
+      const fl = breed === "fluffy";
+
+      // shadow
+      g.save();
+      g.globalAlpha = 0.25 * (1 - Math.min(0.6, zz / 200)) * (o.alpha === undefined ? 1 : o.alpha);
+      g.fillStyle = "#000";
+      ell(g, x + 3 * s, fy, 27 * s * (1 - Math.min(0.4, zz / 250)), 6 * s);
+      g.fill();
+      g.restore();
+
+      const hop = run ? Math.abs(Math.sin(ph * 9)) * 7 : 0;
+      const y = fy - zz - hop * s;
+      const tilt = zz > 0 ? Math.max(-0.35, Math.min(0.35, -(o.vz || 0) / 2000)) : (run ? -0.04 : 0);
+      const swing = run ? Math.sin(ph * 9) * 6 : 0;
+      const airborne = zz > 0;
+      const squish = run ? 1 + Math.sin(ph * 9 + 1.2) * 0.025 : 1;
+
+      g.save();
+      if (o.alpha !== undefined) g.globalAlpha = o.alpha;
+      g.translate(x, y);
+      g.scale(s, s * squish);
+      g.rotate(tilt + (o.dead ? 0.5 : 0));
+      g.lineJoin = "round";
+      g.lineCap = "round";
+      const OUT = "rgba(70,45,70,0.4)";
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.2;
+
+      const earRot = airborne ? ((o.vz || 0) > 0 ? -0.65 : -0.25) : -0.15 + Math.sin(ph * 9) * 0.12;
+      const eo = { airborne: airborne, running: run };
+
+      // far ear
+      drawEar(g, fur, 15, -48, earRot - 0.14, true, eo, ph);
+
+      // fluffy tail puff
+      g.fillStyle = "#ffffff";
+      fluff(g, -27, -22, 6, 6, 8, 3.8);
+
+      // back leg: big fluffy haunch + a paw with toes
+      g.fillStyle = dutch ? fur.patch : fur.dark;
+      fluff(g, -9, -14, 11, 9, 9, 4);
+      g.fillStyle = dutch ? fur.patch : fur.base;
+      const hx = airborne ? -21 : -5 - swing;
+      const hy = airborne ? -7 : -3;
+      ell(g, hx, hy, 12, 4.6, airborne ? 0.3 : 0);
+      fo(g);
+      g.beginPath();
+      g.moveTo(hx + 5, hy - 3); g.lineTo(hx + 5, hy + 3);
+      g.moveTo(hx + 8, hy - 2.5); g.lineTo(hx + 8, hy + 2.5);
+      g.stroke();
+
+      // body: round and fluffy
+      g.fillStyle = fur.base;
+      fluff(g, 0, -20, 24, 15, fl ? 12 : 11, fl ? 6 : 5);
+      if (dutch) {
+        g.fillStyle = fur.patch;
+        ell(g, -12, -23, 12, 11);
+        g.fill();
+      }
+      // soft belly / chest
+      g.fillStyle = fur.light;
+      ell(g, 8, -14, 14, 7);
+      g.fill();
+      g.fillStyle = "rgba(255,255,255,0.35)";
+      ell(g, -2, -29, 14, 3.5, -0.1);
+      g.fill();
+
+      // dress
+      if (acc.body === "dress") {
+        g.save();
+        g.translate(0, 2);
+        g.fillStyle = "#f48fb1";
+        ell(g, -1, -20, 21, 13, -0.05);
+        fo(g);
+        g.fillStyle = "#fff";
+        for (const d of [[-12, -24], [-3, -15], [6, -23], [12, -16], [-8, -12]]) {
+          ell(g, d[0], d[1], 1.7, 1.7);
+          g.fill();
+        }
+        g.fillStyle = "#f8b6cd";
+        for (let i = 0; i < 6; i++) {
+          ell(g, -17 + i * 6.5, -8, 4.2, 3.2);
+          fo(g);
+        }
+        g.strokeStyle = "#e0566b";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(8, -29); g.lineTo(-14, -28);
+        g.stroke();
+        g.restore();
+        g.strokeStyle = OUT;
+        g.lineWidth = 1.2;
+      }
+
+      // front leg
+      g.fillStyle = fur.dark;
+      g.save();
+      g.translate(16, -11);
+      g.rotate(airborne ? 0.9 : swing * 0.04);
+      ell(g, 0, 5, 4.2, 8);
+      fo(g);
+      g.restore();
+      if (!airborne) {
+        g.fillStyle = fur.base;
+        ell(g, 19 + swing * 0.5, -2.2, 7, 3.8);
+        fo(g);
+      }
+
+      // head: big, round and fluffy (cute!)
+      g.fillStyle = fur.base;
+      fluff(g, 23, -37, 14, 12.5, fl ? 11 : 9, fl ? 5.5 : 4);
+      if (dutch) {
+        g.fillStyle = fur.patch;
+        ell(g, 15, -39, 8, 10);
+        g.fill();
+      }
+      // light muzzle
+      g.fillStyle = fur.light;
+      ell(g, 32, -32, 8.5, 6.5);
+      g.fill();
+      // blush
+      g.fillStyle = "rgba(255,130,160,0.5)";
+      ell(g, 25, -31, 4.2, 2.6);
+      g.fill();
+      // nose and mouth
+      g.fillStyle = "#f07a98";
+      g.beginPath();
+      g.moveTo(37, -36); g.quadraticCurveTo(41, -36, 40, -33); g.quadraticCurveTo(38.5, -31.5, 37, -34);
+      g.closePath();
+      g.fill();
+      g.strokeStyle = "rgba(120,60,80,0.8)";
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(38.5, -31.5); g.quadraticCurveTo(37, -29, 34.5, -30.5);
+      g.moveTo(38.5, -31.5); g.quadraticCurveTo(39, -29.5, 41, -30);
+      g.stroke();
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.2;
+
+      if (acc.neck) { g.save(); g.translate(1, 1); drawNeckAcc(g, acc.neck); g.restore(); }
+
+      // near ear
+      drawEar(g, fur, 23, -49, earRot + 0.06, false, eo, ph);
+
+      // eye: big and shiny
+      if (o.dead) {
+        g.strokeStyle = "#222";
+        g.lineWidth = 1.8;
+        g.beginPath();
+        g.moveTo(25, -45); g.lineTo(32, -38);
+        g.moveTo(32, -45); g.lineTo(25, -38);
+        g.stroke();
+      } else {
+        const blink = (Math.floor(time / 2300) % 3 === 0 && (time % 2300) < 120);
+        if (blink) {
+          g.strokeStyle = "#2a2036";
+          g.lineWidth = 2;
+          g.beginPath();
+          g.moveTo(25, -41); g.quadraticCurveTo(29, -39, 33, -41);
+          g.stroke();
+        } else {
+          g.fillStyle = "#2a2036";
+          ell(g, 29, -41, 4.4, 5.2);
+          g.fill();
+          g.fillStyle = "#5b4a86";
+          ell(g, 29.5, -39.5, 2.6, 2.6);
+          g.fill();
+          g.fillStyle = "#fff";
+          ell(g, 27.6, -43, 1.8, 1.8);
+          g.fill();
+          ell(g, 30.8, -38.8, 0.9, 0.9);
+          g.fill();
+        }
+      }
+
+      if (acc.face) {
+        g.save();
+        g.translate(29, -41);
+        g.scale(1.12, 1.12);
+        g.translate(-29, 39);
+        g.strokeStyle = OUT;
+        drawFaceAcc(g, acc.face);
+        g.restore();
+      }
+
+      // whiskers
+      g.strokeStyle = "rgba(90,70,90,0.5)";
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(36, -33); g.lineTo(47, -36);
+      g.moveTo(36, -32); g.lineTo(47, -31);
+      g.stroke();
+
+      g.strokeStyle = OUT;
+      g.lineWidth = 1.2;
+      if (acc.head) { g.save(); g.translate(1, -5); drawHeadAcc(g, acc.head); g.restore(); }
+
+      g.restore();
+    }
+
+    function drawShieldBubble(g, x, y, time) {
+      const left = skillLeft.shield;
+      if (left < 3000 && Math.floor(time / 150) % 2 === 0) return;   // blinks when ending
+      const flash = performance.now() < shieldFlashUntil;
+      g.save();
+      g.translate(x, y);
+      const r = 36 + Math.sin(time / 250) * 1.5 + (flash ? 7 : 0);
+      g.fillStyle = flash ? "rgba(140,210,255,0.45)" : "rgba(100,180,255,0.18)";
+      g.strokeStyle = flash ? "rgba(255,255,255,0.95)" : "rgba(80,150,230,0.85)";
+      g.lineWidth = flash ? 4 : 2.5;
+      g.beginPath();
+      g.arc(0, 0, r, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+      g.restore();
+    }
+
+    // ---- Drawing: obstacles and carrots ----
+    function tuft(g, x, y, c) {
+      g.strokeStyle = c;
+      g.lineWidth = 1.6;
+      g.beginPath();
+      g.moveTo(x - 3, y); g.lineTo(x - 4.5, y - 6);
+      g.moveTo(x, y); g.lineTo(x, y - 8);
+      g.moveTo(x + 3, y); g.lineTo(x + 4.5, y - 6);
+      g.stroke();
+    }
+
+    function drawObstacle(g, o, time) {
+      const sc = (o.sc || 1) * OB_SCALE;
+      const OUT = "rgba(40,25,40,0.7)";
+      g.save();
+      g.translate(o.x, o.fy !== undefined ? o.fy : laneFeetY(o.lane));
+      g.scale(sc, sc);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+      g.strokeStyle = OUT;
+      g.lineWidth = 2.2;
+
+      // soft shadow
+      g.fillStyle = "rgba(0,0,0,0.28)";
+      ell(g, 0, 1, o.type === "log" ? 50 : 26, 5);
+      g.fill();
+
+      if (o.type === "rock") {
+        // two stones with moss and a grass tuft
+        g.fillStyle = "#8a92a6";
+        g.beginPath();
+        g.moveTo(-24, 0); g.quadraticCurveTo(-27, -22, -10, -30); g.quadraticCurveTo(8, -36, 20, -20);
+        g.quadraticCurveTo(28, -8, 24, 0); g.closePath(); fo(g);
+        g.fillStyle = "#a3abbd";
+        ell(g, -7, -22, 10, 6, -0.4); g.fill();
+        g.fillStyle = "#79829a";
+        g.beginPath();
+        g.moveTo(14, 0); g.quadraticCurveTo(14, -14, 26, -14); g.quadraticCurveTo(38, -12, 36, 0); g.closePath(); fo(g);
+        g.fillStyle = "#6fb36f";
+        ell(g, -14, -26, 7, 3.4, -0.5); g.fill();
+        ell(g, 22, -14, 5, 2.6, 0.2); g.fill();
+        g.strokeStyle = "rgba(60,70,90,0.5)";
+        g.lineWidth = 1.2;
+        g.beginPath();
+        g.moveTo(2, -28); g.lineTo(5, -20); g.lineTo(1, -14);
+        g.stroke();
+        tuft(g, -26, 0, "#4f9a55");
+      } else if (o.type === "hole") {
+        g.fillStyle = "#a87b57";
+        ell(g, 0, -3, 42, 13); fo(g);
+        g.fillStyle = "#c79568";
+        ell(g, 0, -5, 38, 10); g.fill();
+        const gr = g.createRadialGradient(0, -3, 3, 0, -3, 30);
+        gr.addColorStop(0, "#0a0605"); gr.addColorStop(1, "#3b261b");
+        g.fillStyle = gr;
+        ell(g, 0, -3, 32, 9); fo(g);
+        g.fillStyle = "#9a6e4b";
+        for (const c of [[-38, -2], [37, -4], [-30, 6], [30, 5]]) { ell(g, c[0], c[1], 3.4, 2.4); g.fill(); }
+        tuft(g, -40, -4, "#4f9a55");
+        tuft(g, 41, -2, "#4f9a55");
+      } else if (o.type === "log") {
+        g.fillStyle = "#8a5a35";
+        rrect(g, -46, -34, 92, 34, 15); fo(g);
+        g.fillStyle = "#a06c41";
+        rrect(g, -42, -32, 84, 12, 8); g.fill();
+        g.strokeStyle = "#6a4326";
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.moveTo(-28, -22); g.lineTo(10, -22);
+        g.moveTo(-18, -12); g.lineTo(32, -12);
+        g.moveTo(14, -30); g.lineTo(26, -30);
+        g.stroke();
+        g.fillStyle = "#6fb36f";
+        ell(g, 10, -33, 14, 3.6); g.fill();
+        g.fillStyle = "#d6a96f";
+        ell(g, -42, -17, 8, 16); fo(g);
+        g.strokeStyle = "#a36e3c";
+        g.lineWidth = 1.3;
+        ell(g, -42, -17, 5, 11); g.stroke();
+        ell(g, -42, -17, 2, 5.5); g.stroke();
+        // a little red mushroom
+        g.fillStyle = "#f3ead8";
+        g.fillRect(27, -41, 3, 8);
+        g.fillStyle = "#e0566b";
+        g.beginPath(); g.ellipse(28.5, -41, 7, 5, 0, Math.PI, 0); fo(g);
+        g.fillStyle = "#fff";
+        ell(g, 26, -43, 1.2, 1.2); g.fill();
+        ell(g, 31, -44, 1, 1); g.fill();
+      } else if (o.type === "bush") {
+        const cols = ["#2e7d4a", "#37905a", "#46a96a"];
+        for (const c of [[-18, -14, 15], [18, -14, 15], [0, -28, 18], [-6, -12, 17], [10, -20, 14]]) {
+          g.fillStyle = cols[Math.floor(Math.abs(c[0] + c[1]) % 3)];
+          ell(g, c[0], c[1], c[2], c[2] * 0.9); fo(g);
+        }
+        g.fillStyle = "rgba(255,255,255,0.18)";
+        ell(g, -4, -34, 9, 5); g.fill();
+        g.fillStyle = "#e0566b";
+        for (const c of [[-14, -12], [10, -22], [4, -8], [-4, -26], [18, -10]]) {
+          ell(g, c[0], c[1], 3, 3); g.fill();
+          g.fillStyle = "rgba(255,255,255,0.8)";
+          ell(g, c[0] - 1, c[1] - 1, 0.9, 0.9); g.fill();
+          g.fillStyle = "#e0566b";
+        }
+      } else if (o.type === "hedgehog") {
+        const bob = Math.sin(time / 120 + o.seed) * 1.5;
+        g.fillStyle = "#6b4a3a";
+        for (let a = -3.0; a <= 0.2; a += 0.3) {
+          const bx = Math.cos(a) * 17, by = -13 + Math.sin(a) * 12;
+          g.beginPath();
+          g.moveTo(bx - 4, by + 3);
+          g.lineTo(Math.cos(a) * 27, -13 + Math.sin(a) * 21);
+          g.lineTo(bx + 4, by + 3);
+          g.closePath(); fo(g);
+        }
+        g.fillStyle = "#7d5846";
+        ell(g, 2, -13 + bob, 19, 13); fo(g);
+        g.fillStyle = "#e8c9a6";
+        ell(g, -15, -9, 9, 7); fo(g);
+        g.fillStyle = "#e8c9a6";
+        g.beginPath(); g.moveTo(-9, -17); g.quadraticCurveTo(-6, -22, -3, -16); g.closePath(); fo(g);
+        g.fillStyle = "#2a2036";
+        ell(g, -14, -12, 2.2, 2.6); g.fill();
+        g.fillStyle = "#fff";
+        ell(g, -14.6, -13, 0.8, 0.8); g.fill();
+        ell(g, -23, -8, 2.4, 2); g.fillStyle = "#2a2036"; g.fill();
+        g.fillStyle = "rgba(255,130,160,0.55)";
+        ell(g, -11, -6, 2.6, 1.6); g.fill();
+        g.fillStyle = "#e8c9a6";
+        ell(g, -8 + Math.sin(time / 90) * 2, -1, 3.4, 2); fo(g);
+        ell(g, 10 - Math.sin(time / 90) * 2, -1, 3.4, 2); fo(g);
+      } else if (o.type === "fox") {
+        const t = Math.sin(time / 70 + o.seed) * 5;
+        // fluffy tail with a white tip
+        g.fillStyle = "#e0702f";
+        g.beginPath();
+        g.moveTo(16, -24); g.quadraticCurveTo(40, -42, 42, -16); g.quadraticCurveTo(30, -10, 16, -16);
+        g.closePath(); fo(g);
+        g.fillStyle = "#fff6ea";
+        g.beginPath();
+        g.moveTo(34, -30); g.quadraticCurveTo(44, -28, 42, -16); g.quadraticCurveTo(36, -14, 31, -17);
+        g.closePath(); fo(g);
+        // legs
+        g.strokeStyle = "#3b2418";
+        g.lineWidth = 4.5;
+        g.beginPath();
+        g.moveTo(-13, -12); g.lineTo(-14 + t, -1);
+        g.moveTo(11, -12); g.lineTo(12 - t, -1);
+        g.moveTo(-5, -12); g.lineTo(-4 - t, -1);
+        g.stroke();
+        g.strokeStyle = OUT;
+        g.lineWidth = 1.8;
+        // body
+        g.fillStyle = "#ee7f38";
+        fluff(g, 2, -20, 21, 10, 9, 3.5);
+        g.fillStyle = "#fff6ea";
+        ell(g, -7, -15, 11, 5.5); g.fill();
+        // head
+        g.fillStyle = "#ee7f38";
+        fluff(g, -23, -27, 10, 9, 8, 3.6);
+        g.fillStyle = "#fff6ea";
+        g.beginPath();
+        g.moveTo(-32, -22); g.quadraticCurveTo(-24, -17, -16, -22); g.quadraticCurveTo(-24, -28, -32, -22);
+        g.closePath(); g.fill();
+        // snout
+        g.fillStyle = "#ee7f38";
+        g.beginPath();
+        g.moveTo(-31, -30); g.lineTo(-45, -24); g.lineTo(-31, -20);
+        g.closePath(); fo(g);
+        g.fillStyle = "#2a2036";
+        ell(g, -45, -24, 2.4, 2); g.fill();
+        // ears
+        g.fillStyle = "#3b2418";
+        g.beginPath(); g.moveTo(-26, -34); g.lineTo(-22, -47); g.lineTo(-16, -33); g.closePath(); fo(g);
+        g.beginPath(); g.moveTo(-18, -35); g.lineTo(-11, -46); g.lineTo(-10, -32); g.closePath(); fo(g);
+        g.fillStyle = "#f4a56a";
+        g.beginPath(); g.moveTo(-23, -34); g.lineTo(-21.5, -42); g.lineTo(-18.5, -34); g.closePath(); g.fill();
+        // eye (a little grumpy brow)
+        g.fillStyle = "#2a2036";
+        ell(g, -27, -29, 2.2, 2.8); g.fill();
+        g.fillStyle = "#fff";
+        ell(g, -27.6, -30, 0.8, 0.8); g.fill();
+        g.strokeStyle = "#3b2418";
+        g.lineWidth = 1.6;
+        g.beginPath(); g.moveTo(-31, -33); g.lineTo(-24, -31); g.stroke();
+      }
+      g.restore();
+    }
+
+    // One carrot, pointing down-left. golden = shiny gold
+    function drawCarrotShape(g, x, y, size, golden, time, phase) {
+      g.save();
+      g.translate(x, y);
+      g.rotate(-0.6);
+      g.scale(size, size);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+      if (golden) {
+        g.shadowColor = "#ffd54a";
+        g.shadowBlur = 12 + Math.sin(time / 200 + phase) * 4;
+      }
+      // leaves
+      g.fillStyle = golden ? "#a6e866" : "#3fae4b";
+      g.strokeStyle = golden ? "#5aa02a" : "#2a7d36";
+      g.lineWidth = 0.7;
+      for (const a of [-0.55, 0, 0.55]) {
+        g.save();
+        g.translate(0, -9);
+        g.rotate(a);
+        ell(g, 0, -5.5, 2.6, 6.5);
+        g.fill(); g.stroke();
+        g.restore();
+      }
+      // body
+      g.fillStyle = golden ? "#ffcf3a" : "#ff8a2a";
+      g.strokeStyle = golden ? "#c99100" : "#c95a14";
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(-5.5, -9);
+      g.quadraticCurveTo(0, -12.5, 5.5, -9);
+      g.quadraticCurveTo(4, 4, 0, 13);
+      g.quadraticCurveTo(-4, 4, -5.5, -9);
+      g.closePath();
+      g.fill();
+      g.shadowBlur = 0;
+      g.stroke();
+      // ridges and a shine
+      g.strokeStyle = golden ? "#d19a00" : "#d2641a";
+      g.beginPath();
+      g.moveTo(-4, -4); g.lineTo(0, -3.4);
+      g.moveTo(-3, 1); g.lineTo(1.5, 1.6);
+      g.moveTo(-1.5, 6); g.lineTo(1, 6.2);
+      g.stroke();
+      g.fillStyle = "rgba(255,255,255,0.45)";
+      ell(g, -2.6, -6, 1.1, 3.4, 0.1);
+      g.fill();
+      g.restore();
+      if (golden) {
+        g.save();
+        g.fillStyle = "#fff";
+        g.globalAlpha = 0.5 + 0.5 * Math.sin(time / 150 + phase);
+        g.fillRect(x + 8, y - 12, 2, 7);
+        g.fillRect(x + 5.5, y - 9.5, 7, 2);
+        g.restore();
+      }
+    }
+
+    function drawItem(g, it, time) {
+      const bob = Math.sin(time / 250 + it.phase) * 3;
+      const y = laneFeetY(it.ly) - it.z + bob;
+      drawCarrotShape(g, it.x, y, it.type === "golden" ? 1.25 : 1.05, it.type === "golden", time, it.phase);
+    }
+
+    // ---- Drawing: the world ----
+    // 5 soft backgrounds. They blend into each other slowly as you level up.
+    const STAGE_NAMES = ["Sunny Meadow", "Green Forest", "Autumn Hills", "Snowy Hills", "Twilight Meadow"];
+    const STAGES = [
+      { sky: ["#bfe6ff", "#eaf8ff"], hill: ["#b6e3ae", "#a2d89a"], lanes: ["#8fd18b", "#98d894", "#8fd18b"], line: "#6fb86f", tree: "#5fae6b" },
+      { sky: ["#cde9da", "#eef8e8"], hill: ["#93c99d", "#7bba88"], lanes: ["#74b57d", "#7bbc84", "#74b57d"], line: "#559a66", tree: "#3f8f5b" },
+      { sky: ["#ffe0bd", "#fff3e0"], hill: ["#eec685", "#deb06c"], lanes: ["#d3b26e", "#dabb78", "#d3b26e"], line: "#b8934f", tree: "#e08a3c" },
+      { sky: ["#d6e6f6", "#f3f8fd"], hill: ["#eaf3fa", "#d8e6f1"], lanes: ["#dfeaf3", "#e7f0f7", "#dfeaf3"], line: "#bfd2e2", tree: "#8fb3a2" },
+      { sky: ["#8a84cc", "#d6b8de"], hill: ["#9a94cc", "#8a86bc"], lanes: ["#8dbab0", "#95c2b8", "#8dbab0"], line: "#6c9a90", tree: "#4d4a8c" }
+    ];
+
+    function hexRgb(c) {
+      return [parseInt(c.substr(1, 2), 16), parseInt(c.substr(3, 2), 16), parseInt(c.substr(5, 2), 16)];
+    }
+
+    // The color between two stages (f = 0 ... 4)
+    function stageMix(f, get) {
+      f = Math.max(0, Math.min(STAGES.length - 1, f));
+      const i = Math.floor(f);
+      const t = f - i;
+      const a = hexRgb(get(STAGES[i]));
+      const b = hexRgb(get(STAGES[Math.min(STAGES.length - 1, i + 1)]));
+      return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," + Math.round(a[2] + (b[2] - a[2]) * t) + ")";
+    }
+
+    function hash(n) {
+      const v = Math.sin(n * 12.9898) * 43758.5453;
+      return v - Math.floor(v);
+    }
+
+    function stageWeight(f, i) {
+      return Math.max(0, 1 - Math.abs(f - i));
+    }
+
+    // Sky, hills, trees, ground and little decorations. groundTop = where the path starts.
+    function drawBackdrop(g, w, groundTop, laneH, nLanes, offset, sf, time, hTot) {
+      // sky
+      const grad = g.createLinearGradient(0, 0, 0, groundTop);
+      grad.addColorStop(0, stageMix(sf, s => s.sky[0]));
+      grad.addColorStop(1, stageMix(sf, s => s.sky[1]));
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, groundTop);
+
+      // sun (day) and moon (twilight)
+      const sunA = 1 - Math.max(0, Math.min(1, sf / 3));
+      if (sunA > 0.02) {
+        g.fillStyle = "rgba(255,246,200," + (0.85 * sunA) + ")";
+        g.beginPath(); g.arc(w * 0.82, groundTop * 0.2, groundTop * 0.11, 0, Math.PI * 2); g.fill();
+      }
+      const moonA = Math.max(0, Math.min(1, sf - 3));
+      if (moonA > 0.02) {
+        g.fillStyle = "rgba(255,250,235," + (0.9 * moonA) + ")";
+        g.beginPath(); g.arc(w * 0.82, groundTop * 0.22, groundTop * 0.08, 0, Math.PI * 2); g.fill();
+      }
+
+      // clouds
+      g.fillStyle = "rgba(255,255,255," + (0.8 - 0.4 * moonA) + ")";
+      for (let i = 0; i < 5; i++) {
+        const span = w + 240;
+        const cx = (((i * span / 5 - offset * 0.05 - time * 0.008) % span) + span) % span - 120;
+        const cy = groundTop * (0.12 + (i % 3) * 0.12);
+        const k = groundTop / 170;
+        ell(g, cx, cy, 44 * k, 11 * k); g.fill();
+        ell(g, cx + 20 * k, cy - 8 * k, 26 * k, 11 * k); g.fill();
+        ell(g, cx - 22 * k, cy - 4 * k, 20 * k, 9 * k); g.fill();
+      }
+
+      // far hills (two layers, they move slowly)
+      for (let layer = 0; layer < 2; layer++) {
+        g.fillStyle = stageMix(sf, s => s.hill[layer]);
+        g.beginPath();
+        g.moveTo(0, groundTop);
+        const amp = groundTop * (layer === 0 ? 0.2 : 0.14);
+        for (let x = 0; x <= w; x += 10) {
+          const y = groundTop - amp * (0.45 + 0.55 * Math.sin((x + offset * (0.1 + layer * 0.12)) / (layer === 0 ? 120 : 80) + layer * 2));
+          g.lineTo(x, y);
+        }
+        g.lineTo(w, groundTop);
+        g.closePath();
+        g.fill();
+      }
+
+      // trees (they appear in the forest and stay for the rest of the trip)
+      const treeA = Math.max(0, Math.min(1, sf));
+      if (treeA > 0.02) {
+        g.save();
+        g.globalAlpha = treeA;
+        const sp = 130;
+        const par = offset * 0.4;
+        const idx0 = Math.floor(par / sp);
+        const k = groundTop / 170;
+        const canopy = stageMix(sf, s => s.tree);
+        for (let i = -1; i < w / sp + 2; i++) {
+          const n = idx0 + i;
+          const tx = n * sp - par + hash(n) * 50;
+          const th = (38 + hash(n + 7) * 24) * k;
+          g.fillStyle = "#7a5a44";
+          g.fillRect(tx - 3 * k, groundTop - th * 0.5, 6 * k, th * 0.5);
+          g.fillStyle = canopy;
+          ell(g, tx, groundTop - th * 0.75, th * 0.36, th * 0.42); g.fill();
+          ell(g, tx - th * 0.2, groundTop - th * 0.55, th * 0.26, th * 0.28); g.fill();
+          ell(g, tx + th * 0.2, groundTop - th * 0.55, th * 0.26, th * 0.28); g.fill();
+        }
+        g.restore();
+      }
+
+      // ground
+      for (let i = 0; i < nLanes; i++) {
+        g.fillStyle = stageMix(sf, s => s.lanes[i % 3]);
+        g.fillRect(0, groundTop + i * laneH, w, laneH);
+      }
+      const lineCol = stageMix(sf, s => s.line);
+      g.fillStyle = lineCol;
+      g.fillRect(0, groundTop + nLanes * laneH, w, Math.max(0, hTot - groundTop - nLanes * laneH));
+      g.strokeStyle = "rgba(255,255,255,0.28)";
+      g.lineWidth = 2;
+      g.setLineDash([36, 44]);
+      g.lineDashOffset = offset % 80;
+      for (let i = 1; i < nLanes; i++) {
+        g.beginPath();
+        g.moveTo(0, groundTop + i * laneH);
+        g.lineTo(w, groundTop + i * laneH);
+        g.stroke();
+      }
+      g.setLineDash([]);
+      g.lineDashOffset = 0;
+      g.strokeStyle = lineCol;
+      g.lineWidth = 3;
+      g.beginPath();
+      g.moveTo(0, groundTop);
+      g.lineTo(w, groundTop);
+      g.stroke();
+
+      // little decorations on the path (a few per lane, different for every stage)
+      const cell = 70;
+      const c0 = Math.floor(offset / cell);
+      for (let l = 0; l < nLanes; l++) {
+        for (let i = -1; i < w / cell + 2; i++) {
+          const c = c0 + i;
+          const r = hash(c * 3.1 + l * 17.7);
+          if (r > 0.4) continue;
+          const dx = c * cell - offset + hash(c + l * 5) * 40;
+          const dy = groundTop + l * laneH + laneH * (0.2 + 0.6 * hash(c * 1.7 + l));
+          const kind = Math.floor(hash(c * 0.37 + l) * 4);
+          for (let st = 0; st < STAGES.length; st++) {
+            const wt = stageWeight(sf, st);
+            if (wt < 0.03) continue;
+            g.save();
+            g.globalAlpha = wt;
+            if (st === 0) {          // flowers
+              const cols = ["#ffffff", "#ffd54a", "#ff9fc0", "#c9a0ff"];
+              g.fillStyle = cols[kind];
+              for (let p = 0; p < 5; p++) {
+                const a = p / 5 * Math.PI * 2;
+                ell(g, dx + Math.cos(a) * 2.8, dy + Math.sin(a) * 2.8, 2.2, 2.2); g.fill();
+              }
+              g.fillStyle = "#f7c948";
+              ell(g, dx, dy, 1.8, 1.8); g.fill();
+            } else if (st === 1) {   // mushrooms
+              g.fillStyle = "#f3ead8";
+              g.fillRect(dx - 1.5, dy - 3, 3, 5);
+              g.fillStyle = kind % 2 ? "#e0566b" : "#d98a4a";
+              g.beginPath(); g.ellipse(dx, dy - 3, 5.5, 4, 0, Math.PI, 0); g.fill();
+              g.fillStyle = "#fff";
+              ell(g, dx - 1.5, dy - 5, 1, 1); g.fill();
+              ell(g, dx + 2, dy - 4.5, 0.9, 0.9); g.fill();
+            } else if (st === 2) {   // fallen leaves
+              g.fillStyle = ["#e0743a", "#d9a233", "#c0502e", "#e8b04a"][kind];
+              ell(g, dx, dy, 4.5, 2.4, hash(c) * 3); g.fill();
+            } else if (st === 3) {   // snow patches
+              g.fillStyle = "#ffffff";
+              ell(g, dx, dy, 9, 3); g.fill();
+              g.fillStyle = "rgba(160,190,215,0.35)";
+              ell(g, dx + 2, dy + 1.5, 7, 1.6); g.fill();
+            } else {                 // fireflies
+              const pulse = 0.5 + 0.5 * Math.sin(time / 400 + c);
+              g.fillStyle = "rgba(255,240,150," + (0.2 * pulse) + ")";
+              ell(g, dx, dy - 10, 9, 9); g.fill();
+              g.fillStyle = "rgba(255,245,170," + (0.6 + 0.4 * pulse) + ")";
+              ell(g, dx, dy - 10, 2.2, 2.2); g.fill();
+            }
+            g.restore();
+          }
+        }
+      }
+
+      // snowflakes
+      const sw = stageWeight(sf, 3);
+      if (sw > 0.03) {
+        g.fillStyle = "rgba(255,255,255," + (0.9 * sw) + ")";
+        for (let i = 0; i < 34; i++) {
+          const fx = (((hash(i) * w + Math.sin(time / 900 + i) * 12 - offset * 0.1) % w) + w) % w;
+          const fy = (hash(i + 99) * hTot + time * 0.04 * (0.5 + hash(i + 7))) % hTot;
+          g.beginPath(); g.arc(fx, fy, 1.4 + hash(i + 3) * 1.2, 0, Math.PI * 2); g.fill();
+        }
+      }
+    }
+
+    function drawOverlay(lines) {
+      ctx.fillStyle = "rgba(10, 16, 40, 0.62)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.font = "40px Arial";
+      ctx.fillText(lines[0], canvas.width / 2, canvas.height / 2 - 50);
+      ctx.font = "18px Arial";
+      for (let i = 1; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, canvas.height / 2 - 15 + (i - 1) * 28);
+      }
+    }
+
+    function draw(time) {
+      drawBackdrop(ctx, W, LANE_TOP, LANE_H, LANES, scroll, shownStage, time, H);
+
+      // Everything is drawn from the back lane to the front lane
+      const skin = getSkin();
+      const list = [];
+      for (const o of obstacles) list.push({ y: laneFeetY(o.lane), kind: "o", o: o });
+      for (const it of items) list.push({ y: laneFeetY(it.ly) + (it.z > 40 ? 40 : 0), kind: "i", o: it });
+      const rabbitY = laneFeetY(laneF);
+      list.push({ y: rabbitY, kind: "r" });
+      list.sort((a, b) => a.y - b.y);
+
+      for (const e of list) {
+        if (e.kind === "o") drawObstacle(ctx, e.o, time);
+        else if (e.kind === "i") drawItem(ctx, e.o, time);
+        else {
+          let alpha;
+          if (skillLeft.ghost > 0) {
+            alpha = 0.5;
+            if (skillLeft.ghost < 1500) alpha = 0.5 + 0.4 * (Math.floor(time / 120) % 2);
+          } else if (invul > 0) {
+            alpha = 0.4 + 0.5 * (Math.floor(time / 100) % 2);
+          }
+          drawRabbit(ctx, RX, rabbitY, z, skin, time, {
+            scale: RS, phase: runTime, running: state === "playing", dead: dead, alpha: alpha, vz: vz, acc: accOn
+          });
+          if (skillLeft.shield > 0 && !dead) drawShieldBubble(ctx, RX + 4, rabbitY - z - 22, time);
+        }
+      }
+
+      // particles
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
+        if (p.text) {
+          ctx.fillStyle = p.color;
+          ctx.font = "bold 18px Arial";
+          ctx.textAlign = "center";
+          ctx.strokeStyle = "rgba(40,40,70,0.8)";
+          ctx.lineWidth = 3;
+          ctx.strokeText(p.text, p.x, p.y);
+          ctx.fillText(p.text, p.x, p.y);
+        } else {
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      if (time < levelUpUntil) {
+        ctx.textAlign = "center";
+        ctx.font = "bold 28px Arial";
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgba(40,40,70,0.85)";
+        ctx.fillStyle = "#fff3a8";
+        const msg = "Level " + level + " - " + getRank() + "!";
+        ctx.strokeText(msg, W / 2, 70);
+        ctx.fillText(msg, W / 2, 70);
+      }
+
+      if (state === "ready") {
+        if (resumed) {
+          drawOverlay(["Welcome back!", "Press Space or tap to keep going"]);
+        } else {
+          drawOverlay(["Rabbit", "Press Space or tap to start", "Up / Down = change lane, Space = jump", "(1-6 = skills, M = menu)"]);
+        }
+      }
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        drawOverlay([
+          "Continue?",
+          "Score: " + score + "   Distance: " + Math.floor(dist) + " m",
+          "Cost: " + cost + " coins (you have " + coins + ")",
+          coins >= cost ? "C = continue     Space = give up" : "Not enough coins     Space = give up"
+        ]);
+      }
+      if (state === "over") {
+        drawOverlay([
+          "Game Over",
+          "Score: " + score + "   Distance: " + Math.floor(dist) + " m",
+          "Coins earned: +" + runCoins,
+          "Best: " + best,
+          "Space = play again",
+          "M = menu"
+        ]);
+      }
+    }
+
+    function drawSkillIcon(g, id, time, cx, cy, scale) {
+      g.save();
+      g.translate(cx, cy);
+      g.scale(scale, scale);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+
+      if (id === "ghost") {
+        g.translate(0, Math.sin(time / 300) * 2);
+        g.shadowColor = "#8fd3ff";
+        g.shadowBlur = 8;
+        g.fillStyle = "#eaf2ff";
+        g.beginPath();
+        g.arc(0, -2, 13, Math.PI, 0);
+        g.lineTo(13, 14);
+        g.quadraticCurveTo(8.7, 8, 4.3, 14);
+        g.quadraticCurveTo(0, 8, -4.3, 14);
+        g.quadraticCurveTo(-8.7, 8, -13, 14);
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#1a1a2e";
+        g.beginPath(); g.ellipse(-5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(0, 3, 2.4, 3, 0, 0, Math.PI * 2); g.fill();
+      }
+
+      if (id === "slow") {
+        g.fillStyle = "#2d3a66";
+        g.strokeStyle = "#e8eefc";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 2;
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 2;
+          g.beginPath();
+          g.moveTo(Math.cos(a) * 10, Math.sin(a) * 10);
+          g.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+          g.stroke();
+        }
+        const ma = time / 1200 - Math.PI / 2;
+        const ha = time / 9000 - Math.PI / 2;
+        g.strokeStyle = "#8fd3ff";
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ma) * 10, Math.sin(ma) * 10);
+        g.stroke();
+        g.strokeStyle = "#ffffff";
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ha) * 6, Math.sin(ha) * 6);
+        g.stroke();
+      }
+
+      if (id === "double") {
+        const sx = Math.max(0.12, Math.abs(Math.cos(time / 450)));
+        g.scale(sx, 1);
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.arc(0, 0, 10, 0, Math.PI * 2);
+        g.stroke();
+        g.fillStyle = "#8a6100";
+        g.font = "bold 13px Arial";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText("x2", 0, 1);
+      }
+
+      if (id === "magnet") {
+        g.lineCap = "butt";
+        g.lineWidth = 8;
+        g.strokeStyle = "#e94560";
+        g.beginPath();
+        g.moveTo(-11, -9);
+        g.lineTo(-11, 2);
+        g.arc(0, 2, 11, Math.PI, 0, true);
+        g.lineTo(11, -9);
+        g.stroke();
+        g.fillStyle = "#dfe6f2";
+        g.fillRect(-15, -12, 8, 7);
+        g.fillRect(7, -12, 8, 7);
+
+        const starts = [[-24, -24], [0, -30], [24, -24]];
+        for (let k = 0; k < 3; k++) {
+          const t = ((time / 900) + k / 3) % 1;
+          const x = starts[k][0] * (1 - t);
+          const y = starts[k][1] + (-8 - starts[k][1]) * t;
+          g.globalAlpha = 1 - t * 0.8;
+          g.fillStyle = "#ffe066";
+          g.beginPath();
+          g.arc(x, y, 2.4, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.globalAlpha = 1;
+      }
+
+      if (id === "lucky") {
+        const pulse = 1 + Math.sin(time / 250) * 0.08;
+        g.rotate(Math.sin(time / 700) * 0.15);
+        g.scale(pulse, pulse);
+        g.shadowColor = "gold";
+        g.shadowBlur = 8;
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 2;
+        g.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? 14 : 6;
+          const a = -Math.PI / 2 + i * Math.PI / 5;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r;
+          if (i === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.stroke();
+
+        g.strokeStyle = "#ffffff";
+        g.lineWidth = 1.5;
+        g.globalAlpha = 0.5 + 0.5 * Math.sin(time / 200);
+        g.beginPath();
+        g.moveTo(15, -16); g.lineTo(15, -10);
+        g.moveTo(12, -13); g.lineTo(18, -13);
+        g.moveTo(-17, 8); g.lineTo(-17, 14);
+        g.moveTo(-20, 11); g.lineTo(-14, 11);
+        g.stroke();
+      }
+
+      if (id === "shield") {
+        const pulse = 1 + Math.sin(time / 300) * 0.04;
+        g.scale(pulse, pulse);
+        g.shadowColor = "#6cf"; g.shadowBlur = 8;
+        g.fillStyle = "#3a7bd5"; g.strokeStyle = "#e8f4ff"; g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, -15); g.quadraticCurveTo(10, -12, 14, -12);
+        g.quadraticCurveTo(14, 6, 0, 16); g.quadraticCurveTo(-14, 6, -14, -12);
+        g.quadraticCurveTo(-10, -12, 0, -15);
+        g.closePath(); g.fill(); g.shadowBlur = 0; g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = 3;
+        g.beginPath(); g.moveTo(-6, 0); g.lineTo(-1.5, 5); g.lineTo(7, -6); g.stroke();
+      }
+
+      g.restore();
+    }
+
+    function drawSkillSlot(e, time) {
+      const g = e.g;
+      const sk = skills[e.idx];
+      const count = skillCounts[sk.id];
+      const left = skillLeft[sk.id];
+      const active = left > 0;
+
+      g.clearRect(0, 0, 64, 64);
+      g.fillStyle = "#1f2a4d";
+      rrect(g, 1.5, 1.5, 61, 61, 10);
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = active ? "gold" : "#2d3a66";
+      g.stroke();
+
+      g.save();
+      g.globalAlpha = (count > 0 || active) ? 1 : 0.35;
+      drawSkillIcon(g, sk.id, time, 32, 30, 1.25);
+      g.restore();
+
+      // key number (top left)
+      g.fillStyle = "#aab";
+      g.font = "bold 12px Arial";
+      g.textAlign = "left";
+      g.textBaseline = "top";
+      g.fillText(String(e.idx + 1), 7, 6);
+
+      // how many you own (bottom right)
+      g.font = "bold 17px Arial";
+      g.textAlign = "right";
+      g.textBaseline = "bottom";
+      g.lineJoin = "round";
+      g.lineWidth = 4;
+      g.strokeStyle = "#16213e";
+      g.strokeText(String(count), 58, 55);
+      g.fillStyle = count > 0 ? "gold" : "#8892b0";
+      g.fillText(String(count), 58, 55);
+
+      // time left
+      if (active) {
+        g.fillStyle = "gold";
+        g.fillRect(8, 58, 48 * left / sk.duration, 3);
+      }
+    }
+
+    // ---- Drawing: menu screen ----
+    function drawMenu(time) {
+      const w = menuCanvas.width;
+      // the preview background slowly goes through all 5 places and back
+      const sf = Math.abs(((time / 4000) % 8) - 4);
+      drawBackdrop(mctx, w, 118, 41, 2, time * 0.25, sf, time, 200);
+
+      const skin = getSkin();
+
+      // a rock rolls toward the rabbit, which jumps over it
+      const rockX = 640 - ((time % 3000) / 3000) * 760;
+      const d = rockX - 120;
+      let zz = 0;
+      let vv = 0;
+      if (d > -30 && d < 150) {
+        const p = (150 - d) / 180;
+        zz = 4 * p * (1 - p) * 75;
+        vv = (0.5 - p);
+      }
+      drawObstacle(mctx, { type: "rock", x: rockX, fy: 168, sc: 1.55, lane: 0, seed: 0 }, time);
+
+      const c1 = 700 - (((time + 1400) % 3000) / 3000) * 860;
+      drawCarrotShape(mctx, c1, 146, 1.3, false, time, 1);
+      drawCarrotShape(mctx, c1 + 56, 146, 1.3, false, time, 2);
+      drawCarrotShape(mctx, c1 + 112, 146, 1.3, true, time, 3);
+
+      drawRabbit(mctx, 120, 172, zz, skin, time, { scale: 1.25, phase: time / 1000, running: true, vz: vv * 800, acc: accOn });
+
+      const label = skin.name + " - " + STAGE_NAMES[Math.round(sf)];
+      if (label !== lastLabel) {
+        lastLabel = label;
+        document.getElementById("previewLabel").textContent = label;
+      }
+    }
+
+    // Small rabbits on the skin cards
+    function drawSkinPreview(e, time) {
+      const g = e.g;
+      const c = e.canvas;
+      g.fillStyle = "#8fd18b";
+      g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#bfe6ff";
+      g.fillRect(0, 0, c.width, 22);
+      g.fillStyle = "#7cc47a";
+      g.fillRect(0, 36, c.width, 10);
+      drawRabbit(g, 90, 41, 0, e.skin, time, { scale: 0.5, phase: time / 1000 + e.idx, running: true });
+    }
+
+    // Accessory cards: the rabbit wears only this item
+    function drawAccPreview(e, time) {
+      const g = e.g;
+      const c = e.canvas;
+      g.fillStyle = "#bfe6ff";
+      g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#8fd18b";
+      g.fillRect(0, 64, c.width, 12);
+      const worn = {};
+      worn[e.acc.slot] = e.acc.id;
+      drawRabbit(g, 90, 70, 0, getSkin(), time, { scale: 0.82, phase: 0, running: false, acc: worn });
+    }
+
+    // ---- Accessories panel ----
+    function setAccOpen(v) {
+      accOpen = v;
+      document.getElementById("accBody").classList.toggle("hidden", !v);
+      document.getElementById("accArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderAccessories();
+    }
+
+    function onAccClick(a) {
+      if (ownedAcc.includes(a.id)) {
+        if (accOn[a.slot] === a.id) {
+          delete accOn[a.slot];
+          showMsg("accMsg", a.name + " removed.");
+        } else {
+          accOn[a.slot] = a.id;
+          showMsg("accMsg", "Your rabbit is wearing: " + a.name + "!");
+        }
+      } else if (coins >= a.price) {
+        coins -= a.price;
+        ownedAcc.push(a.id);
+        accOn[a.slot] = a.id;
+        checkAchievements();
+        showMsg("accMsg", "You bought " + a.name + "!");
+      } else {
+        showMsg("accMsg", "Not enough coins. You need " + (a.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderAccessories() {
+      const list = document.getElementById("accList");
+      list.innerHTML = "";
+      accPreviews = [];
+      accessories.forEach(function (a) {
+        const owned = ownedAcc.includes(a.id);
+        const worn = accOn[a.slot] === a.id;
+        const card = document.createElement("button");
+        card.className = "card" + (worn ? " equipped" : "") + (!owned && coins < a.price ? " cant" : "");
+
+        const cv = document.createElement("canvas");
+        cv.className = "preview";
+        cv.width = 180;
+        cv.height = 76;
+
+        const name = document.createElement("div");
+        name.textContent = a.name;
+        name.style.fontWeight = "bold";
+
+        const status = document.createElement("small");
+        if (worn) status.textContent = "Wearing - click to remove";
+        else if (owned) status.textContent = "Click to wear";
+        else status.textContent = a.price + " coins";
+
+        card.appendChild(cv);
+        card.appendChild(name);
+        card.appendChild(status);
+        card.addEventListener("click", function () { onAccClick(a); });
+        list.appendChild(card);
+        accPreviews.push({ acc: a, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function drawSkillPreview(e, time) {
+      e.g.clearRect(0, 0, 48, 48);
+      e.g.fillStyle = "#16213e";
+      rrect(e.g, 0, 0, 48, 48, 8);
+      e.g.fill();
+      drawSkillIcon(e.g, e.skill.id, time, 24, 24, 0.95);
+    }
+
+    // ---- Main loop ----
+    function frame(time) {
+      if (screen === "menu") {
+        drawMenu(time);
+        if (skinsOpen) {
+          for (const e of skinPreviews) drawSkinPreview(e, time);
+        }
+        if (skillsOpen) {
+          for (const e of skillPreviews) drawSkillPreview(e, time);
+        }
+        if (accOpen) {
+          for (const e of accPreviews) drawAccPreview(e, time);
+        }
+      } else {
+        const dtMs = Math.min(50, time - lastFrame);
+        const dt = dtMs / 1000;
+
+        shownLevel += (Math.min(level, MAX_LEVEL) - shownLevel) * 0.05;
+        shownStage += (Math.min(4, (level - 1) * 4 / 7) - shownStage) * Math.min(1, dt * 0.5);
+
+        if (state === "playing") {
+          surviveMs += dtMs;
+          if (surviveMs / 1000 > stats.bestSurvive) stats.bestSurvive = surviveMs / 1000;
+          achTimer += dtMs;
+          if (achTimer > 500) {
+            achTimer = 0;
+            checkAchievements();
+          }
+          for (const sk of skills) {
+            if (skillLeft[sk.id] > 0) skillLeft[sk.id] = Math.max(0, skillLeft[sk.id] - dtMs);
+          }
+          update(dt);
+          const dm = Math.floor(dist);
+          if (dm !== lastDist) {
+            lastDist = dm;
+            document.getElementById("dist").textContent = dm;
+          }
+        } else if (state === "ready") {
+          runTime += 0;
+        }
+        updateParticles(dt);
+        draw(time);
+        for (const e of skillSlots) drawSkillSlot(e, time);
+      }
+      lastFrame = time;
+      requestAnimationFrame(frame);
+    }
+
+    buildSkillBar();
+    showScreen("menu");
+    updateMenu();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
