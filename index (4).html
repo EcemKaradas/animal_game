@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Games</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --paper: #231a38; --card: #33284f; --ink: #130d20; --text: #fff1d0; --line: #f3dfb2; --shadow: #0f0a19; --muted: #bdb1d6; --coral: #ee6c4d; --teal: #2a9d8f; --gold: #ffc233; }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(rgba(255,241,208,.07) 1.2px, transparent 1.4px) 0 0 / 18px 18px,
+        var(--paper);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 22px 18px 60px; }
+    nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { font-family: "Press Start 2P", monospace; font-size: 11px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+    .logo { width: 34px; height: 34px; display: grid; place-items: center; background: var(--coral); border: 3px solid var(--line); border-radius: 9px; box-shadow: 3px 3px 0 var(--shadow); font-size: 16px; }
+    .wallet { font-family: "Press Start 2P", monospace; font-size: 10px; padding: 9px 12px; background: var(--card); border: 3px solid var(--line); border-radius: 10px; box-shadow: 3px 3px 0 var(--shadow); }
+    .wallet b { color: var(--gold); font-weight: normal; margin-left: 6px; }
+    header { text-align: center; padding: 46px 0 40px; position: relative; }
+    .sun { width: 190px; height: 95px; margin: 0 auto -30px; border-radius: 190px 190px 0 0; position: relative; z-index: 0;
+      background: repeating-linear-gradient(180deg, #ffb347 0 14px, #ff8a5c 14px 26px, #ee6c4d 26px 38px, transparent 38px 42px); opacity: .7;
+      -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+    h1 { position: relative; z-index: 1; margin: 0; font-family: "Press Start 2P", monospace; font-weight: normal; font-size: clamp(24px, 6vw, 54px); line-height: 1.3; color: var(--text);
+      text-shadow: 3px 3px 0 var(--coral), 6px 6px 0 #7a2f55, 9px 9px 0 var(--shadow); }
+    .stripes { display: flex; justify-content: center; gap: 0; margin: 28px auto 16px; width: 240px; height: 10px; border: 2.5px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .stripes i { flex: 1; }
+    .sub { color: var(--muted); font-size: 18px; font-weight: 700; line-height: 1.5; max-width: 580px; margin: 0 auto; }
+    .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 28px 24px; margin-top: 14px; }
+    .card {
+      flex: 0 1 calc((100% - 48px) / 3); display: flex; flex-direction: column; text-decoration: none; color: inherit;
+      background: var(--card); border: 3px solid var(--c); border-radius: 16px; box-shadow: 6px 6px 0 var(--shadow), 0 0 26px color-mix(in srgb, var(--c) 22%, transparent); overflow: hidden;
+      transition: transform .12s, box-shadow .12s; animation: rise .45s ease backwards; animation-delay: calc(var(--i) * 60ms);
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+    .card:hover, .card:focus-visible { transform: translate(-3px, -4px); box-shadow: 9px 10px 0 var(--shadow), 0 0 34px color-mix(in srgb, var(--c) 40%, transparent); outline: none; }
+    .card:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0 var(--shadow); }
+    .art { position: relative; height: 170px; border-bottom: 3px solid var(--c); overflow: hidden; background: var(--c); }
+    .art svg { width: 100%; height: 100%; display: block; transition: transform .35s ease; }
+    .card:hover .art svg { transform: scale(1.06); }
+    .art::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(19,13,32,.10) 0 2px, transparent 2px 4px); }
+    .tag { position: absolute; z-index: 2; top: 10px; left: 10px; font-family: "Press Start 2P", monospace; font-size: 8px; padding: 6px 8px; background: var(--card); color: var(--text); border: 2.5px solid var(--line); border-radius: 7px; box-shadow: 2px 2px 0 var(--shadow); }
+    .body { padding: 16px 16px 18px; display: flex; flex-direction: column; flex: 1; }
+    h2 { margin: 0 0 8px; font-family: "Press Start 2P", monospace; font-weight: normal; font-size: 17px; }
+    p { margin: 0 0 14px; font-size: 15px; font-weight: 700; line-height: 1.42; color: var(--muted); flex: 1; }
+    .stats { display: flex; gap: 8px; margin-bottom: 14px; font-family: "Press Start 2P", monospace; font-size: 8px; color: var(--muted); }
+    .stats span { flex: 1; padding: 8px 9px; border: 2.5px dashed rgba(255,241,208,.3); border-radius: 8px; }
+    .stats b { display: block; margin-top: 7px; font-weight: normal; font-size: 13px; color: var(--gold); }
+    .play { text-align: center; padding: 12px; font-family: "Press Start 2P", monospace; font-size: 12px; color: var(--ink); background: var(--c); border: 3px solid var(--ink); border-radius: 11px; box-shadow: 0 4px 0 var(--shadow); transition: transform .1s, box-shadow .1s; }
+    .card:hover .play { transform: translateY(2px); box-shadow: 0 2px 0 var(--shadow); }
+    footer { margin-top: 46px; text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); }
+    @media (max-width: 860px) and (min-width: 601px) { .card { flex-basis: calc(50% - 12px); } }
+    @media (max-width: 600px) {
+      .wrap { padding: 16px 12px 44px; } .brand span { display: none; }
+      header { padding: 34px 0 30px; } .sub { font-size: 15px; }
+      .grid { gap: 20px 12px; }
+      .card { flex: 0 1 calc(50% - 6px); border-width: 2.5px; border-radius: 13px; box-shadow: 4px 4px 0 var(--shadow); }
+      .art { height: 104px; } .tag { font-size: 6px; padding: 4px 5px; top: 6px; left: 6px; }
+      .body { padding: 11px 10px 12px; } h2 { font-size: 12px; } p { font-size: 12px; margin-bottom: 10px; }
+      .stats { gap: 5px; font-size: 6px; } .stats span { padding: 6px; } .stats b { font-size: 10px; } .play { font-size: 9px; padding: 10px 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="brand"><div class="logo">🐾</div><span id="brand">ANIMAL GAMES</span></div>
+      <div class="wallet">COINS<b id="totalCoins">0</b></div>
+    </nav>
+    <header>
+      <div class="sun"></div>
+      <h1 id="title">ANIMAL GAMES</h1>
+      <div class="stripes"><i style="background:#ee6c4d"></i><i style="background:#ffb347"></i><i style="background:#ffd23f"></i><i style="background:#58c27a"></i><i style="background:#4db8ff"></i><i style="background:#9b9cff"></i></div>
+      <div class="sub">Pick an animal and play its own game. Every animal has its own coins, skins, skills and achievements.</div>
+    </header>
+    <main class="grid">
+      <a class="card" href="snake.html" style="--c:#58c27a; --i:0">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect x="0" y="0" width="30" height="30" fill="#c7e6aa"/><rect x="0" y="30" width="30" height="30" fill="#b9dc9a"/><rect x="0" y="60" width="30" height="30" fill="#c7e6aa"/><rect x="0" y="90" width="30" height="30" fill="#b9dc9a"/><rect x="0" y="120" width="30" height="30" fill="#c7e6aa"/><rect x="30" y="0" width="30" height="30" fill="#b9dc9a"/><rect x="30" y="30" width="30" height="30" fill="#c7e6aa"/><rect x="30" y="60" width="30" height="30" fill="#b9dc9a"/><rect x="30" y="90" width="30" height="30" fill="#c7e6aa"/><rect x="30" y="120" width="30" height="30" fill="#b9dc9a"/><rect x="60" y="0" width="30" height="30" fill="#c7e6aa"/><rect x="60" y="30" width="30" height="30" fill="#b9dc9a"/><rect x="60" y="60" width="30" height="30" fill="#c7e6aa"/><rect x="60" y="90" width="30" height="30" fill="#b9dc9a"/><rect x="60" y="120" width="30" height="30" fill="#c7e6aa"/><rect x="90" y="0" width="30" height="30" fill="#b9dc9a"/><rect x="90" y="30" width="30" height="30" fill="#c7e6aa"/><rect x="90" y="60" width="30" height="30" fill="#b9dc9a"/><rect x="90" y="90" width="30" height="30" fill="#c7e6aa"/><rect x="90" y="120" width="30" height="30" fill="#b9dc9a"/><rect x="120" y="0" width="30" height="30" fill="#c7e6aa"/><rect x="120" y="30" width="30" height="30" fill="#b9dc9a"/><rect x="120" y="60" width="30" height="30" fill="#c7e6aa"/><rect x="120" y="90" width="30" height="30" fill="#b9dc9a"/><rect x="120" y="120" width="30" height="30" fill="#c7e6aa"/><rect x="150" y="0" width="30" height="30" fill="#b9dc9a"/><rect x="150" y="30" width="30" height="30" fill="#c7e6aa"/><rect x="150" y="60" width="30" height="30" fill="#b9dc9a"/><rect x="150" y="90" width="30" height="30" fill="#c7e6aa"/><rect x="150" y="120" width="30" height="30" fill="#b9dc9a"/><rect x="180" y="0" width="30" height="30" fill="#c7e6aa"/><rect x="180" y="30" width="30" height="30" fill="#b9dc9a"/><rect x="180" y="60" width="30" height="30" fill="#c7e6aa"/><rect x="180" y="90" width="30" height="30" fill="#b9dc9a"/><rect x="180" y="120" width="30" height="30" fill="#c7e6aa"/><rect x="210" y="0" width="30" height="30" fill="#b9dc9a"/><rect x="210" y="30" width="30" height="30" fill="#c7e6aa"/><rect x="210" y="60" width="30" height="30" fill="#b9dc9a"/><rect x="210" y="90" width="30" height="30" fill="#c7e6aa"/><rect x="210" y="120" width="30" height="30" fill="#b9dc9a"/><rect x="32" y="92" width="26" height="26" rx="8" fill="#4fb36b" stroke="#2b2238" stroke-width="2.5"/><rect x="62" y="92" width="26" height="26" rx="8" fill="#3f9d5a" stroke="#2b2238" stroke-width="2.5"/><rect x="92" y="92" width="26" height="26" rx="8" fill="#4fb36b" stroke="#2b2238" stroke-width="2.5"/><rect x="92" y="62" width="26" height="26" rx="8" fill="#3f9d5a" stroke="#2b2238" stroke-width="2.5"/><rect x="122" y="62" width="26" height="26" rx="8" fill="#4fb36b" stroke="#2b2238" stroke-width="2.5"/><rect x="152" y="62" width="26" height="26" rx="8" fill="#3f9d5a" stroke="#2b2238" stroke-width="2.5"/><rect x="152" y="32" width="26" height="26" rx="8" fill="#4fb36b" stroke="#2b2238" stroke-width="2.5"/><rect x="182" y="32" width="26" height="26" rx="8" fill="#3f9d5a" stroke="#2b2238" stroke-width="2.5"/><circle cx="190" cy="42" r="3" fill="#fff" stroke="#2b2238" stroke-width="1.5"/><circle cx="190" cy="42" r="1.2" fill="#2b2238"/><path d="M208 45 h9 m0 0 l3 -3 m-3 3 l3 3" stroke="#e0425e" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="225" cy="105" r="11" fill="#e8576b" stroke="#2b2238" stroke-width="2.5"/><path d="M225 94 q2 -8 8 -9" stroke="#2b6b3a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="221" cy="101" r="2.5" fill="#fff" opacity=".6"/></svg><span class="tag">P1 &middot; Arcade</span></div>
+        <div class="body">
+          <h2>Snake</h2>
+          <p>Eat fruits, grow longer and turn rainbow.</p>
+          <div class="stats"><span>COINS <b id="snakeCoins">0</b></span><span>BEST <b id="snakeBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="rabbit.html" style="--c:#ff8fb0; --i:1">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#bfe6f5"/>
+<circle cx="200" cy="30" r="16" fill="#ffe08a"/><ellipse cx="60" cy="30" rx="26" ry="9" fill="#fff" opacity=".9"/><ellipse cx="82" cy="24" rx="16" ry="8" fill="#fff" opacity=".9"/>
+<path d="M0 95 Q60 60 120 90 T240 80 V150 H0Z" fill="#a8d88a"/>
+<rect x="0" y="100" width="240" height="50" fill="#e9c896"/><path d="M0 100 H240" stroke="#2b2238" stroke-width="2.5"/>
+<path d="M0 125 H240" stroke="#d6ad76" stroke-width="3" stroke-dasharray="14 10"/>
+<g transform="translate(40,70)"><ellipse cx="28" cy="40" rx="24" ry="17" fill="#fff" stroke="#2b2238" stroke-width="2.5"/><circle cx="6" cy="42" r="7" fill="#fff" stroke="#2b2238" stroke-width="2.5"/><circle cx="50" cy="26" r="14" fill="#fff" stroke="#2b2238" stroke-width="2.5"/><ellipse cx="48" cy="2" rx="5" ry="16" fill="#fff" stroke="#2b2238" stroke-width="2.5" transform="rotate(-8 48 2)"/><ellipse cx="48" cy="3" rx="2" ry="10" fill="#ffb3c6" transform="rotate(-8 48 3)"/><ellipse cx="59" cy="3" rx="5" ry="15" fill="#fff" stroke="#2b2238" stroke-width="2.5" transform="rotate(12 59 3)"/><circle cx="55" cy="25" r="2.4" fill="#2b2238"/><circle cx="62" cy="30" r="2.2" fill="#ff8fa8"/></g>
+<g transform="translate(150,95)"><path d="M0 8 L22 0 L22 18Z" fill="#ff9140" stroke="#2b2238" stroke-width="2.5" stroke-linejoin="round" transform="rotate(-20 11 9)"/><path d="M20 4 l10 -6 M21 8 l11 -1 M20 11 l9 5" stroke="#3f9d5a" stroke-width="3" stroke-linecap="round"/></g>
+<path d="M200 120 q4 -22 24 -18 q14 6 10 18Z" fill="#a9a3b8" stroke="#2b2238" stroke-width="2.5"/></svg><span class="tag">P2 &middot; Runner</span></div>
+        <div class="body">
+          <h2>Rabbit</h2>
+          <p>Hop along the path, collect carrots, jump over obstacles.</p>
+          <div class="stats"><span>COINS <b id="rabbitCoins">0</b></span><span>BEST <b id="rabbitBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="monkey.html" style="--c:#ffb347; --i:2">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#9fd8b4"/>
+<g fill="#6fb98c"><circle cx="30" cy="30" r="34"/><circle cx="210" cy="20" r="40"/><circle cx="110" cy="10" r="30"/></g>
+<path d="M0 128 Q30 118 60 128 T120 128 T180 128 T240 128 V150 H0Z" fill="#5aaee6" stroke="#2b2238" stroke-width="2.5"/>
+<path d="M110 -4 Q112 40 124 62" stroke="#6b8f3a" stroke-width="5" fill="none"/><path d="M110 -4 Q112 40 124 62" stroke="#2b2238" stroke-width="1.5" fill="none" stroke-dasharray="3 5"/>
+<path d="M215 -4 Q210 30 205 50" stroke="#6b8f3a" stroke-width="5" fill="none"/>
+<g transform="translate(95,52)"><path d="M10 50 q-14 10 -4 26" stroke="#2b2238" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="28" cy="52" rx="18" ry="22" fill="#a2683a" stroke="#2b2238" stroke-width="2.5"/><circle cx="28" cy="24" r="16" fill="#a2683a" stroke="#2b2238" stroke-width="2.5"/><ellipse cx="28" cy="29" rx="10" ry="8" fill="#f2cd9d"/><circle cx="23" cy="23" r="2.4" fill="#2b2238"/><circle cx="33" cy="23" r="2.4" fill="#2b2238"/><path d="M24 32 q4 3 8 0" stroke="#2b2238" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="11" cy="22" r="6" fill="#f2cd9d" stroke="#2b2238" stroke-width="2.5"/><circle cx="45" cy="22" r="6" fill="#f2cd9d" stroke="#2b2238" stroke-width="2.5"/><path d="M20 38 q-6 -20 4 -34" stroke="#a2683a" stroke-width="7" fill="none" stroke-linecap="round"/></g>
+<path d="M160 70 q30 -4 36 30 q-24 -14 -36 -30Z" fill="#ffd84d" stroke="#2b2238" stroke-width="2.5" stroke-linejoin="round"/><path d="M160 70 l-4 -5" stroke="#2b2238" stroke-width="3" stroke-linecap="round"/></svg><span class="tag">P3 &middot; Physics</span></div>
+        <div class="body">
+          <h2>Monkey</h2>
+          <p>Swing from liana to liana, grab bananas, don't fall in the river.</p>
+          <div class="stats"><span>COINS <b id="monkeyCoins">0</b></span><span>BEST <b id="monkeyBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="koala.html" style="--c:#9b9cff; --i:3">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#c9e7ff"/><circle cx="40" cy="30" r="14" fill="#fff6c9"/>
+<g fill="#7fc58d" stroke="#2b2238" stroke-width="2.5"><ellipse cx="80" cy="30" rx="32" ry="20"/><ellipse cx="170" cy="36" rx="34" ry="20"/></g>
+<rect x="100" y="0" width="52" height="150" fill="#b8814f" stroke="#2b2238" stroke-width="2.5"/>
+<path d="M114 10 v30 M128 40 v40 M140 90 v40 M112 80 v30" stroke="#8b5e34" stroke-width="3" stroke-linecap="round"/>
+<g transform="translate(120,58)"><ellipse cx="12" cy="40" rx="17" ry="22" fill="#b3b7c4" stroke="#2b2238" stroke-width="2.5"/><circle cx="12" cy="14" r="15" fill="#b3b7c4" stroke="#2b2238" stroke-width="2.5"/><circle cx="-2" cy="6" r="9" fill="#cfd2dc" stroke="#2b2238" stroke-width="2.5"/><circle cx="26" cy="6" r="9" fill="#cfd2dc" stroke="#2b2238" stroke-width="2.5"/><circle cx="7" cy="14" r="2.3" fill="#2b2238"/><circle cx="18" cy="14" r="2.3" fill="#2b2238"/><ellipse cx="12" cy="20" rx="5" ry="3.8" fill="#2b2238"/></g>
+<circle cx="200" cy="40" r="12" fill="#7a4a2b" stroke="#2b2238" stroke-width="2.5"/><circle cx="196" cy="37" r="2" fill="#a8734e"/>
+<g transform="translate(36,96)"><ellipse cx="0" cy="0" rx="12" ry="9" fill="#ffd84d" stroke="#2b2238" stroke-width="2.5"/><path d="M-4 -8 v16 M2 -8.5 v17" stroke="#2b2238" stroke-width="2.5"/><ellipse cx="-4" cy="-12" rx="7" ry="4" fill="#fff" opacity=".8" stroke="#2b2238" stroke-width="1.5"/></g></svg><span class="tag">P4 &middot; Climber</span></div>
+        <div class="body">
+          <h2>Koala</h2>
+          <p>Climb a giant tree, switch sides, dodge coconuts and bees.</p>
+          <div class="stats"><span>COINS <b id="koalaCoins">0</b></span><span>BEST <b id="koalaBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="frog.html" style="--c:#6ed16a; --i:4">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#7cc5c0"/>
+<path d="M0 30 Q60 18 120 30 T240 28" stroke="#9ed7d2" stroke-width="3" fill="none"/>
+<ellipse cx="60" cy="118" rx="38" ry="11" fill="#58a8a2" opacity=".6"/>
+<g stroke="#2b2238" stroke-width="2.5"><path d="M30 112 a40 13 0 1 0 80 0 a40 13 0 1 0 -80 0 M70 112 l32 -10" fill="#6ec26a"/></g>
+<path d="M170 128 a28 9 0 1 0 56 0 a28 9 0 1 0 -56 0Z" fill="#7fd078" stroke="#2b2238" stroke-width="2.5"/>
+<path d="M200 120 q-30 -50 -64 -8" stroke="#fff" stroke-width="2" stroke-dasharray="3 6" fill="none" stroke-linecap="round" opacity=".7"/>
+<g transform="translate(46,62)"><ellipse cx="24" cy="38" rx="26" ry="18" fill="#4dae4a" stroke="#2b2238" stroke-width="2.5"/><circle cx="12" cy="18" r="9" fill="#4dae4a" stroke="#2b2238" stroke-width="2.5"/><circle cx="36" cy="18" r="9" fill="#4dae4a" stroke="#2b2238" stroke-width="2.5"/><circle cx="12" cy="18" r="4.5" fill="#fff" stroke="#2b2238" stroke-width="1.8"/><circle cx="36" cy="18" r="4.5" fill="#fff" stroke="#2b2238" stroke-width="1.8"/><circle cx="13" cy="18" r="2" fill="#2b2238"/><circle cx="37" cy="18" r="2" fill="#2b2238"/><path d="M12 40 q12 9 24 0" stroke="#2b2238" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="24" cy="48" rx="14" ry="6" fill="#a9e3a0" opacity=".8"/></g>
+<g transform="translate(176,52)"><ellipse cx="0" cy="0" rx="5" ry="4" fill="#2b2238"/><ellipse cx="-5" cy="-6" rx="7" ry="4" fill="#fff" stroke="#2b2238" stroke-width="1.5" transform="rotate(-25 -5 -6)"/><ellipse cx="5" cy="-6" rx="7" ry="4" fill="#fff" stroke="#2b2238" stroke-width="1.5" transform="rotate(25 5 -6)"/></g></svg><span class="tag">P5 &middot; Precision</span></div>
+        <div class="body">
+          <h2>Frog</h2>
+          <p>Hold to charge, jump from lily pad to lily pad and catch flies.</p>
+          <div class="stats"><span>COINS <b id="frogCoins">0</b></span><span>BEST <b id="frogBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="fish.html" style="--c:#4db8ff; --i:5">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#4aa8e0"/>
+<path d="M60 0 L90 150 H40Z M150 0 L190 150 H130Z" fill="#7fc6ee" opacity=".35"/>
+<path d="M0 150 V132 q10 -26 14 0 q6 -30 12 0 V150Z M214 150 V128 q10 -26 14 0 q6 -28 12 0 V150Z" fill="#2f8c6a" stroke="#2b2238" stroke-width="2"/>
+<g transform="translate(88,40)"><path d="M70 36 L100 14 L100 58Z" fill="#ff8a3d" stroke="#2b2238" stroke-width="2.5" stroke-linejoin="round"/><ellipse cx="38" cy="36" rx="38" ry="26" fill="#ff9d4d" stroke="#2b2238" stroke-width="2.5"/><path d="M34 12 q10 -14 24 -2 q-4 10 -14 12Z" fill="#ff8a3d" stroke="#2b2238" stroke-width="2.5" stroke-linejoin="round"/><path d="M50 14 q8 22 0 44" stroke="#ffc08a" stroke-width="5" fill="none" stroke-linecap="round" opacity=".8"/><circle cx="20" cy="30" r="6" fill="#fff" stroke="#2b2238" stroke-width="2"/><circle cx="19" cy="30" r="2.8" fill="#2b2238"/><path d="M6 42 q6 5 12 2" stroke="#2b2238" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
+<g transform="translate(26,100)"><path d="M26 10 L38 2 L38 18Z" fill="#ffe27a" stroke="#2b2238" stroke-width="2" stroke-linejoin="round"/><ellipse cx="14" cy="10" rx="15" ry="9" fill="#ffe27a" stroke="#2b2238" stroke-width="2"/><circle cx="7" cy="8" r="2.2" fill="#2b2238"/></g>
+<g fill="none" stroke="#fff" stroke-width="2" opacity=".85"><circle cx="198" cy="40" r="5"/><circle cx="210" cy="22" r="3.5"/><circle cx="190" cy="14" r="2.5"/></g></svg><span class="tag">P6 &middot; Survival</span></div>
+        <div class="body">
+          <h2>Fish</h2>
+          <p>Eat smaller fish, run from bigger ones, and grow!</p>
+          <div class="stats"><span>COINS <b id="fishCoins">0</b></span><span>BEST <b id="fishBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+
+      <a class="card" href="mouse.html" style="--c:#ffd23f; --i:6">
+        <div class="art"><svg viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="240" height="150" fill="#f3e2b8"/>
+<g fill="#ead49f"><rect x="0" y="0" width="30" height="30"/><rect x="60" y="0" width="30" height="30"/><rect x="30" y="30" width="30" height="30"/><rect x="90" y="30" width="30" height="30"/></g>
+<path d="M0 40 H90 M60 40 V100 M120 0 V70 M120 70 H200 M170 40 V110 M30 110 H130 M130 110 V150 M200 70 V130" stroke="#b9764a" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M0 40 H90 M60 40 V100 M120 0 V70 M120 70 H200 M170 40 V110 M30 110 H130 M130 110 V150 M200 70 V130" stroke="#d99a6b" stroke-width="2.5" stroke-linecap="round" fill="none" transform="translate(-1,-1)"/>
+<rect x="0" y="0" width="240" height="150" fill="none" stroke="#b9764a" stroke-width="7"/>
+<g transform="translate(150,84)"><path d="M0 14 L28 0 L28 28Z" fill="#ffd23f" stroke="#2b2238" stroke-width="2.5" stroke-linejoin="round" transform="rotate(-10 14 14)"/><circle cx="18" cy="12" r="3" fill="#f0a800"/><circle cx="12" cy="19" r="2" fill="#f0a800"/></g>
+<g transform="translate(20,64)"><path d="M2 20 q-18 10 -12 30" stroke="#f4a3b6" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(6,-6)"/><ellipse cx="22" cy="20" rx="18" ry="12" fill="#a7a3b3" stroke="#2b2238" stroke-width="2.5"/><circle cx="38" cy="20" r="9" fill="#a7a3b3" stroke="#2b2238" stroke-width="2.5"/><circle cx="34" cy="10" r="6" fill="#f7b8c8" stroke="#2b2238" stroke-width="2.5"/><circle cx="34" cy="30" r="6" fill="#f7b8c8" stroke="#2b2238" stroke-width="2.5"/><circle cx="42" cy="18" r="1.8" fill="#2b2238"/><circle cx="42" cy="23" r="1.8" fill="#2b2238"/><circle cx="47" cy="20.5" r="2.2" fill="#ff7b9c"/></g>
+<g transform="translate(205,100)"><rect x="0" y="0" width="26" height="14" rx="3" fill="#c9c3d6" stroke="#2b2238" stroke-width="2.5"/><path d="M4 0 l4 -6 l4 6 l4 -6 l4 6" stroke="#2b2238" stroke-width="2" fill="none" stroke-linejoin="round"/></g></svg><span class="tag">P7 &middot; Maze</span></div>
+        <div class="body">
+          <h2>Mouse</h2>
+          <p>Run through mazes, eat the cheese and dodge the cats and traps.</p>
+          <div class="stats"><span>COINS <b id="mouseCoins">0</b></span><span>BEST <b id="mouseBest">0</b></span></div>
+          <div class="play">&#9654; PLAY</div>
+        </div>
+      </a>
+    </main>
+    <footer>Your coins and best scores are saved on this device.</footer>
+  </div>
+  <script>
+    // Change the name of the collection here (we will decide on the final name later!)
+    const COLLECTION_NAME = "ANIMAL GAMES";
+    document.getElementById("title").textContent = COLLECTION_NAME;
+    document.getElementById("brand").textContent = COLLECTION_NAME;
+    document.title = COLLECTION_NAME;
+    for (const id of ["snakeCoins", "snakeBest", "rabbitCoins", "rabbitBest", "monkeyCoins", "monkeyBest", "koalaCoins", "koalaBest", "frogCoins", "frogBest", "fishCoins", "fishBest", "mouseCoins", "mouseBest"]) {
+      let v = 0;
+      try { v = Number(localStorage.getItem(id)) || 0; } catch (e) {}
+      document.getElementById(id).textContent = v;
+    }
+    let total = 0;
+    for (const id of ["snakeCoins", "rabbitCoins", "monkeyCoins", "koalaCoins", "frogCoins", "fishCoins", "mouseCoins"]) total += Number(document.getElementById(id).textContent) || 0;
+    document.getElementById("totalCoins").textContent = total;
+  </script>
+</body>
+</html>
