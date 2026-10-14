@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frog Game</title>
+  <style>
+    body {
+      background: #1a1a2e;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px 0;
+      min-height: 100vh;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+    }
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 804px;
+      max-width: 100%;
+    }
+    .hidden { display: none; }
+
+    canvas {
+      background: #16213e;
+      border: 3px solid #e94560;
+      border-radius: 8px;
+      max-width: 100%;
+      height: auto;
+    }
+    .gold { color: gold; font-weight: bold; }
+
+    /* ---- Menu ---- */
+    h1 {
+      margin: 0 0 10px;
+      font-size: 56px;
+      letter-spacing: 10px;
+      color: #e94560;
+    }
+    #previewLabel {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #aab;
+      height: 18px;
+    }
+    #menuStats {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+    #menuHint {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #aab;
+    }
+    .bigBtn {
+      margin-top: 14px;
+      padding: 14px 48px;
+      font-size: 22px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .bigBtn:hover { background: #ff5c78; }
+
+    /* ---- Two panels, one under the other (top right) ---- */
+    #sidePanels {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      width: 400px;
+      max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel {
+      flex-shrink: 0;
+      background: #1b2444;
+      border: 2px solid #2d3a66;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    .panelHead {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: bold;
+      color: white;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .panelHead:hover { color: #ff8da0; }
+    .panelBody { padding: 0 12px 12px; }
+    .coinsLine { font-size: 14px; margin-bottom: 8px; }
+    #legend {
+      font-size: 12px;
+      color: #aab;
+      margin-bottom: 8px;
+    }
+    .msg {
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 14px;
+      color: gold;
+      text-align: center;
+    }
+
+    /* Skin cards */
+    #shop, #accList {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .card {
+      font: inherit;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .card:hover { border-color: #e94560; }
+    .card.equipped { border-color: gold; }
+    .card.cant { opacity: 0.55; }
+    .card canvas.preview {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+    .card small {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      color: #aab;
+    }
+
+    /* Skill rows */
+    .skillRow {
+      display: grid;
+      grid-template-columns: 48px 1fr auto auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .skillRow canvas.skillPrev {
+      display: block;
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: 8px;
+    }
+    .skillRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .buyBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .buyBtn:hover { background: #ff5c78; }
+    .buyBtn.cant { opacity: 0.5; }
+    .infoBtn {
+      width: 28px;
+      height: 28px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .infoBtn:hover { background: #3b4b85; }
+    .skillDesc {
+      grid-column: 1 / -1;
+      font-size: 13px;
+      color: #cdd5f0;
+      background: #16213e;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    /* Achievements */
+    .headRight { display: flex; align-items: center; }
+    .badge2 {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      border-radius: 10px;
+      background: #e94560;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge2.hidden { display: none; }
+    .achRow {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: #1f2a4d;
+      border: 2px solid #2d3a66;
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .achRow.ready { border-color: gold; }
+    .achRow.claimed { opacity: 0.6; }
+    .achIcon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2d3a66;
+      color: #8892b0;
+      font-size: 18px;
+    }
+    .achRow.ready .achIcon, .achRow.claimed .achIcon { background: gold; color: #7a5c00; }
+    .achRow small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      color: #aab;
+    }
+    .bar {
+      height: 6px;
+      margin-top: 6px;
+      background: #16213e;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar > div { height: 100%; background: #e94560; }
+    .achRow.ready .bar > div, .achRow.claimed .bar > div { background: gold; }
+    .claimBtn {
+      font: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: #3a2a00;
+      background: gold;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .claimBtn:hover { background: #ffe066; }
+    .achStatus {
+      font-size: 12px;
+      color: #aab;
+      text-align: right;
+    }
+    #toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 50;
+      max-width: min(280px, calc(100vw - 28px));
+      padding: 8px 12px;
+      font-size: 13px;
+      color: white;
+      background: rgba(27, 36, 68, 0.92);
+      border: 1px solid gold;
+      border-radius: 10px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ---- Game ---- */
+    #skillBar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    canvas.skillIcon {
+      width: 64px;
+      height: 64px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+    }
+    #hud {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 800px;
+      max-width: 100%;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    #hud span { color: #e94560; font-weight: bold; }
+    #hud span.gold { color: gold; }
+    #overBtns {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .actBtn {
+      padding: 10px 22px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background: #e94560;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .actBtn:hover { background: #ff5c78; }
+    .actBtn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    #restartBtn { background: #2d3a66; }
+    #restartBtn:hover { background: #3b4b85; }
+    #menuBtn {
+      margin-top: 12px;
+      padding: 8px 22px;
+      font-size: 15px;
+      color: white;
+      background: #2d3a66;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #menuBtn:hover { background: #3b4b85; }
+    #hubLink { position: fixed; top: 10px; left: 10px; z-index: 50; padding: 6px 12px;
+      background: rgba(20,28,60,0.85); color: #cfe0ff; border: 1px solid #3b4b85; border-radius: 16px;
+      font: 600 13px Arial, sans-serif; text-decoration: none; }
+    #hubLink:hover { background: #3b4b85; }
+  </style>
+</head>
+<body>
+  <a id="hubLink" href="index.html">&larr; Animals</a>
+
+  <!-- ================= MENU SCREEN ================= -->
+  <div id="menuScreen" class="screen">
+
+    <div id="sidePanels">
+      <div class="panel">
+        <button id="skinsHead" class="panelHead"><span>Skins</span><span id="skinsArrow">&#9662;</span></button>
+        <div id="skinsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skinsCoins" class="gold">0</span></div>
+          <div id="legend"></div>
+          <div id="shop"></div>
+          <div id="skinMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="skillsHead" class="panelHead"><span>Skills</span><span id="skillsArrow">&#9662;</span></button>
+        <div id="skillsBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="skillsCoins" class="gold">0</span></div>
+          <div id="skillsLegend"></div>
+          <div id="skillList"></div>
+          <div id="skillMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="accHead" class="panelHead"><span>Accessories</span><span id="accArrow">&#9662;</span></button>
+        <div id="accBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="accCoins" class="gold">0</span></div>
+          <div style="font-size:12px;color:#aab;margin-bottom:8px;">Just for fun! Wear one item per spot (head, face, neck, body). Click an owned item to wear or remove it.</div>
+          <div id="accList"></div>
+          <div id="accMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button id="achHead" class="panelHead"><span>Achievements</span><span class="headRight"><span id="achBadge" class="badge2 hidden">0</span><span id="achArrow">&#9662;</span></span></button>
+        <div id="achBody" class="panelBody hidden">
+          <div class="coinsLine">Coins: <span id="achCoins" class="gold">0</span> &nbsp;|&nbsp; <span id="achSummary"></span></div>
+          <button id="claimAll" class="claimBtn hidden" style="width:100%;margin-bottom:8px">Claim all</button>
+          <div id="achList"></div>
+          <div id="achMsg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <h1>FROG</h1>
+    <canvas id="menuCanvas" width="576" height="200"></canvas>
+    <div id="previewLabel"></div>
+
+    <div id="menuStats">
+      Coins: <span id="menuCoins" class="gold">0</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Best: <span id="menuBest" class="gold">0</span>
+    </div>
+
+    <button id="startBtn" class="bigBtn">Start Game</button>
+    <div id="menuHint">Hold Space (or touch the game) to charge a jump, let go to jump to the next lily pad. Catch flies on the way! Open the panels (top right) for skins, skills and achievements.</div>
+  </div>
+
+  <!-- ================= GAME SCREEN ================= -->
+  <div id="gameScreen" class="screen hidden">
+    <div id="skillBar"></div>
+    <div id="hud">
+      <div>Score: <span id="score">0</span></div>
+      <div>Level: <span id="level">1</span></div>
+      <div>Rank: <span id="rank">Tadpole</span></div>
+      <div>Distance: <span id="dist">0</span> m</div>
+      <div>Best: <span id="best">0</span></div>
+      <div>Coins: <span id="coins" class="gold">0</span></div>
+    </div>
+    <canvas id="game" width="800" height="520"></canvas>
+    <div id="overBtns">
+      <button id="continueBtn" class="actBtn" style="display:none">Continue</button>
+      <button id="restartBtn" class="actBtn" style="display:none">Play again</button>
+    </div>
+    <button id="menuBtn">Menu</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const menuCanvas = document.getElementById("menuCanvas");
+    const mctx = menuCanvas.getContext("2d");
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ---- World ----
+    // The frog sits on a lily pad. Hold Space / the screen to charge a jump, let go to jump to the next pad!
+    const WATER_Y = 392;           // the surface of the pond (the lily pads float here)
+    const SURF = WATER_Y - 4;      // the height of the feet when the frog sits on a pad
+    const G = 1700;                // gravity
+    const ANGLE = 0.95;            // the jump angle (about 54 degrees)
+    const V_MIN = 380;             // the weakest jump
+    const V_MAX = 900;             // the strongest jump
+    const CHARGE_TIME = 0.8;       // seconds to charge a full jump
+    const SIN2A = Math.sin(2 * ANGLE);
+    const LEAP_V = 820;            // how fast the fish leaps out of the water
+
+    // ---- Settings (easy to tweak!) ----
+    const SPECIAL_EVERY = 8;       // a golden fly appears after every 8 normal flies
+    const COINS_PER_POINT = 1;     // 1 point = 1 coin
+    const POINTS = { fly: 1, golden: 3 };
+    const CONTINUE_COSTS = [200, 300, 500];
+    const SLOW_FACTOR = 0.6;       // Slow Motion: everything moves at 60% speed
+    const MAGNET_RANGE = 230;      // Fly Magnet: flies within 230 px are pulled in
+    const PX_PER_METER = 50;
+    const SHOW_PATH = true;        // draw the dotted jump path while you charge
+
+    const ranks = ["Tadpole", "Pond Hopper", "Fly Catcher", "Lily Leaper", "Marsh Master", "Swamp Prince", "Moon Frog", "Legend"];
+    const MAX_LEVEL = ranks.length;
+
+    const STAGE_NAMES = ["Sunny Pond", "Misty Marsh", "Golden Sunset", "Rainy Swamp", "Moonlit Pond"];
+
+    // ---- Frogs in the shop ----
+    // base = body color, belly, spot = the color of spots, eye = the color of the eyes [hue, saturation %, lightness %].
+    // style: plain, redeye (big red eyes + orange feet), spots (dark spots), toad (bumpy), glass (see-through)
+    const skins = [
+      { id: "tree",     name: "Green Tree Frog", price: 0,   style: "plain",  base: [112, 58, 46], belly: [75, 60, 84],  spot: [112, 50, 32], eye: [48, 90, 60] },
+      { id: "redeye",   name: "Red-Eyed Frog",   price: 100, style: "redeye", base: [100, 66, 44], belly: [55, 70, 82],  spot: [100, 50, 30], eye: [0, 85, 50] },
+      { id: "blue",     name: "Blue Dart Frog",  price: 100, style: "spots",  base: [214, 85, 52], belly: [210, 70, 80], spot: [220, 40, 14], eye: [0, 0, 12] },
+      { id: "golden",   name: "Golden Frog",     price: 200, style: "plain",  base: [46, 92, 56],  belly: [50, 90, 80],  spot: [38, 80, 38], eye: [30, 90, 30] },
+      { id: "straw",    name: "Strawberry Frog", price: 250, style: "spots",  base: [4, 82, 52],   belly: [10, 70, 82],  spot: [0, 0, 12],   eye: [0, 0, 12] },
+      { id: "toad",     name: "Toad",            price: 300, style: "toad",   base: [32, 34, 38],  belly: [40, 30, 74],  spot: [28, 38, 26], eye: [40, 90, 58] },
+      { id: "candy",    name: "Cotton Candy",    price: 300, style: "plain",  base: [330, 62, 78], belly: [340, 60, 92], spot: [330, 50, 60], eye: [280, 50, 40] },
+      { id: "glass",    name: "Glass Frog",      price: 400, style: "glass",  base: [150, 55, 72], belly: [150, 40, 90], spot: [150, 60, 40], eye: [60, 80, 55] }
+    ];
+
+    // ---- Accessories: only for fun. One item per spot (head, face, neck, body). ----
+    const accessories = [
+      { id: "flower",   name: "Lily Flower",    slot: "head", price: 40 },
+      { id: "party",    name: "Party Hat",      slot: "head", price: 60 },
+      { id: "tophat",   name: "Top Hat",        slot: "head", price: 80 },
+      { id: "crown",    name: "Little Crown",   slot: "head", price: 200 },
+      { id: "glasses",  name: "Round Glasses",  slot: "face", price: 60 },
+      { id: "shades",   name: "Sunglasses",     slot: "face", price: 80 },
+      { id: "bowtie",   name: "Bow Tie",        slot: "neck", price: 40 },
+      { id: "scarf",    name: "Cozy Scarf",     slot: "neck", price: 50 },
+      { id: "vest",     name: "Tiny Vest",      slot: "body", price: 120 },
+      { id: "cape",     name: "Hero Cape",      slot: "body", price: 180 }
+    ];
+
+    // ---- Skills: you buy them with coins, each purchase = one use. Press 1-6 in the game. ----
+    const skills = [
+      { id: "ghost",  name: "Ghost Frog",      price: 60, duration: 5000,
+        desc: "Your frog turns into a ghost for 5 seconds and hops straight through dragonflies, fish and birds." },
+      { id: "slow",   name: "Slow Motion",     price: 40, duration: 6000,
+        desc: "Slows the whole pond down for 6 seconds, so it is easier to time your jumps." },
+      { id: "double", name: "Double Coins",    price: 80, duration: 15000,
+        desc: "Every fly gives you twice the coins for 15 seconds. Your score stays the same." },
+      { id: "magnet", name: "Fly Magnet",      price: 50, duration: 8000,
+        desc: "For 8 seconds, flies that are close to your frog fly toward it." },
+      { id: "lucky",  name: "Golden Flies",    price: 50, duration: 15000,
+        desc: "For 15 seconds, a golden fly shows up with every new lily pad. One appears right away." },
+      { id: "shield", name: "Shield",          price: 150, duration: 60000,
+        desc: "A protective bubble for 1 minute. If your frog would hit something, it bursts through, and the shield also bounces you out of the water and saves a sinking pad." }
+    ];
+
+    // ---- Saved data (the frog has its own coins, skins, skills and achievements) ----
+    let best = Number(localStorage.getItem("frogBest")) || 0;
+    let coins = Number(localStorage.getItem("frogCoins")) || 0;
+    let ownedSkins = ["tree"];
+    try {
+      ownedSkins = JSON.parse(localStorage.getItem("frogOwned")) || ["tree"];
+    } catch (e) {}
+    let equippedSkin = localStorage.getItem("frogSkin") || "tree";
+    if (!skins.some(s => s.id === equippedSkin) || !ownedSkins.includes(equippedSkin)) equippedSkin = "tree";
+
+    let ownedAcc = [];
+    let accOn = {};
+    try { ownedAcc = JSON.parse(localStorage.getItem("frogAcc")) || []; } catch (e) {}
+    try { accOn = JSON.parse(localStorage.getItem("frogAccOn")) || {}; } catch (e) {}
+    for (const slot of Object.keys(accOn)) {
+      const a = accessories.find(x => x.id === accOn[slot]);
+      if (!a || a.slot !== slot || !ownedAcc.includes(a.id)) delete accOn[slot];
+    }
+
+    let skillCounts = {};
+    try {
+      skillCounts = JSON.parse(localStorage.getItem("frogSkills")) || {};
+    } catch (e) {}
+    for (const sk of skills) {
+      if (typeof skillCounts[sk.id] !== "number") skillCounts[sk.id] = 0;
+    }
+
+    let stats = { totalScore: 0, flies: 0, golden: 0, bestRun: 0, bestSurvive: 0, bestLevel: 1, bestDist: 0, continues: 0, hops: 0, perfects: 0, skillsUsed: {} };
+    try {
+      const savedStats = JSON.parse(localStorage.getItem("frogStats"));
+      if (savedStats) stats = Object.assign(stats, savedStats);
+    } catch (e) {}
+    if (!stats.skillsUsed) stats.skillsUsed = {};
+
+    let achDone = {};
+    let achClaimed = {};
+    try { achDone = JSON.parse(localStorage.getItem("frogAchDone")) || {}; } catch (e) {}
+    try { achClaimed = JSON.parse(localStorage.getItem("frogAchClaimed")) || {}; } catch (e) {}
+
+    const ACH = [
+      { id: "firstfly",  name: "First Fly",         desc: "Catch your first fly.",                       goal: 1,    reward: 5,   value: () => stats.flies },
+      { id: "score100",  name: "Snack Time",        desc: "Collect 100 points in total.",                goal: 100,  reward: 10,  value: () => stats.totalScore },
+      { id: "score500",  name: "Hungry Frog",       desc: "Collect 500 points in total.",                goal: 500,  reward: 50,  value: () => stats.totalScore },
+      { id: "score1000", name: "Fly Feast",         desc: "Collect 1000 points in total.",               goal: 1000, reward: 100, value: () => stats.totalScore },
+      { id: "run50",     name: "Strong Run",        desc: "Score 50 points in a single game.",           goal: 50,   reward: 25,  value: () => stats.bestRun },
+      { id: "hops100",   name: "Lily Hopper",       desc: "Land on 100 lily pads in total.",             goal: 100,  reward: 20,  value: () => stats.hops },
+      { id: "perfect20", name: "Bullseye",          desc: "Land in the middle of a pad 20 times.",       goal: 20,   reward: 30,  value: () => stats.perfects },
+      { id: "dist500",   name: "Long Hop",          desc: "Travel 500 meters in a single game.",         goal: 500,  reward: 25,  unit: " m", value: () => Math.floor(stats.bestDist) },
+      { id: "dist2000",  name: "Pond Marathon",     desc: "Travel 2000 meters in a single game.",        goal: 2000, reward: 70,  unit: " m", value: () => Math.floor(stats.bestDist) },
+      { id: "live60",    name: "Staying Dry",       desc: "Play for 1 minute without falling.",          goal: 60,   reward: 10,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live120",   name: "Steady Hopper",     desc: "Play for 2 minutes without falling.",         goal: 120,  reward: 20,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "live300",   name: "Unstoppable",       desc: "Play for 5 minutes without falling.",         goal: 300,  reward: 60,  unit: " s", value: () => Math.floor(stats.bestSurvive) },
+      { id: "level5",    name: "Growing Up",        desc: "Reach level 5.",                              goal: 5,    reward: 15,  value: () => stats.bestLevel },
+      { id: "level8",    name: "Legend Frog",       desc: "Reach level 8.",                              goal: 8,    reward: 40,  value: () => stats.bestLevel },
+      { id: "golden10",  name: "Golden Taste",      desc: "Catch 10 golden flies.",                      goal: 10,   reward: 20,  value: () => stats.golden },
+      { id: "skills",    name: "Skill Master",      desc: "Use each of the 6 skills at least once.",     goal: 6,    reward: 30,  value: () => Object.keys(stats.skillsUsed).length },
+      { id: "fashion",   name: "Fashion Frog",      desc: "Buy a new frog.",                             goal: 1,    reward: 15,  value: () => ownedSkins.length - 1 },
+      { id: "dress1",    name: "Dress Up",          desc: "Buy an accessory.",                           goal: 1,    reward: 15,  value: () => ownedAcc.length },
+      { id: "dress5",    name: "Fashion Star",      desc: "Own 5 accessories.",                          goal: 5,    reward: 40,  value: () => ownedAcc.length },
+      { id: "comeback",  name: "Second Chance",     desc: "Use Continue once.",                          goal: 1,    reward: 10,  value: () => stats.continues }
+    ];
+
+    function saveAll() {
+      try {
+        localStorage.setItem("frogBest", best);
+        localStorage.setItem("frogCoins", coins);
+        localStorage.setItem("frogOwned", JSON.stringify(ownedSkins));
+        localStorage.setItem("frogSkin", equippedSkin);
+        localStorage.setItem("frogAcc", JSON.stringify(ownedAcc));
+        localStorage.setItem("frogAccOn", JSON.stringify(accOn));
+        localStorage.setItem("frogSkills", JSON.stringify(skillCounts));
+        localStorage.setItem("frogStats", JSON.stringify(stats));
+        localStorage.setItem("frogAchDone", JSON.stringify(achDone));
+        localStorage.setItem("frogAchClaimed", JSON.stringify(achClaimed));
+      } catch (e) {}
+    }
+    window.addEventListener("pagehide", saveAll);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) saveAll();
+    });
+
+    // ---- Game state ----
+    let screen = "menu";
+    let state;              // "ready", "playing", "continue" or "over"
+    // The frog: mode "sit" (on a pad) or "air". (x, y) = the middle of the feet.
+    let fr = { mode: "sit", x: 0, y: SURF, vx: 0, vy: 0, pad: null, charge: 0, charging: false, land: 0 };
+    let pads = [], items = [], enemies = [], particles = [];
+    let camX = 0, startX = 0, maxX = 0;
+    let score = 0, level = 1, eatenCount = 0, runCoins = 0, continuesUsed = 0;
+    let dist = 0;
+    let goldenActive = false;
+    let invul = 0;
+    let dead = false;
+    let resumed = false;
+    let shownStage = 0;
+    let enemyTimer = 0;
+    let padCounter = 0, lastScoredPad = -1;
+    let worldTime = 0;
+    let accOpen = false;
+    let accPreviews = [];
+    let surviveMs = 0;
+    let achTimer = 0;
+    let shieldFlashUntil = 0;
+    let levelUpUntil = 0;
+    let msgTimers = {};
+    let lastLabel = "";
+    let lastFrame = 0;
+    let lastDist = -1;
+
+    let skillLeft = {};
+    for (const sk of skills) skillLeft[sk.id] = 0;
+
+    let skinsOpen = false;
+    let skillsOpen = false;
+    let achOpen = false;
+    let skinPreviews = [];
+    let skillPreviews = [];
+    let skillSlots = [];
+    let infoOpen = {};
+
+    let toastQueue = [];
+    let toastBusy = false;
+
+    // ---- Colors ----
+    function getSkin() {
+      return skins.find(s => s.id === equippedSkin);
+    }
+
+    function hsl(c, dl) {
+      return "hsl(" + c[0] + "," + c[1] + "%," + Math.max(5, Math.min(97, c[2] + (dl || 0))) + "%)";
+    }
+
+    // Every level needs more points than the one before: 25, 60, 105, 160, 225, 300, 385 ...
+    function levelFor(sc) {
+      let lv = 1, need = 25, step = 25;
+      while (sc >= need) {
+        lv++;
+        step += 10;
+        need += step;
+      }
+      return lv;
+    }
+
+    function getRank() {
+      return ranks[Math.min(level - 1, ranks.length - 1)];
+    }
+
+    function rrect(g, x, y, w, h, r) {
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+    }
+
+    function showScreen(name) {
+      screen = name;
+      document.getElementById("menuScreen").classList.toggle("hidden", name !== "menu");
+      document.getElementById("gameScreen").classList.toggle("hidden", name !== "game");
+    }
+
+    function startGame() {
+      setSkinsOpen(false);
+      setSkillsOpen(false);
+      setAchOpen(false);
+      setAccOpen(false);
+      showScreen("game");
+      resetGame();
+    }
+
+    function goMenu() {
+      saveAll();
+      showScreen("menu");
+      updateMenu();
+    }
+
+    function setState(s) {
+      state = s;
+      syncButtons();
+    }
+
+    function syncButtons() {
+      const cBtn = document.getElementById("continueBtn");
+      const rBtn = document.getElementById("restartBtn");
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        cBtn.style.display = "inline-block";
+        cBtn.textContent = "Continue (" + cost + " coins)";
+        cBtn.disabled = coins < cost;
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Give up";
+      } else if (state === "over") {
+        cBtn.style.display = "none";
+        rBtn.style.display = "inline-block";
+        rBtn.textContent = "Play again";
+      } else {
+        cBtn.style.display = "none";
+        rBtn.style.display = "none";
+      }
+    }
+
+
+    // ---- Game setup ----
+    function resetGame() {
+      items = []; enemies = []; particles = []; pads = [];
+      score = 0; level = 1; shownStage = 0;
+      eatenCount = 0; runCoins = 0; continuesUsed = 0;
+      dist = 0; goldenActive = false; invul = 0; dead = false; resumed = false;
+      surviveMs = 0; worldTime = 0;
+      for (const sk of skills) skillLeft[sk.id] = 0;
+      camX = 0;
+      padCounter = 0; lastScoredPad = -1;
+      pads.push({ id: padCounter++, x: 250, r: 74, amp: 0, w: 0, ph: 0, stand: null, standMax: 8, sink: 0, sunk: false, flower: true });
+      while (pads[pads.length - 1].x < W + 700) addPad(true);
+      fr = { mode: "sit", x: 250, y: SURF, vx: 0, vy: 0, pad: pads[0], charge: 0, charging: false, land: 0 };
+      pads[0].stand = 8;
+      lastScoredPad = 0;
+      startX = fr.x;
+      maxX = fr.x;
+      enemyTimer = 4;
+      setState("ready");
+      updateHud();
+    }
+
+    function updateHud() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("level").textContent = level;
+      document.getElementById("rank").textContent = getRank();
+      document.getElementById("best").textContent = best;
+      document.getElementById("coins").textContent = coins;
+      document.getElementById("dist").textContent = Math.floor(dist);
+    }
+
+    function updateMenu() {
+      document.getElementById("menuCoins").textContent = coins;
+      document.getElementById("menuBest").textContent = best;
+      document.getElementById("skinsCoins").textContent = coins;
+      document.getElementById("skillsCoins").textContent = coins;
+      renderShop();
+      renderSkillShop();
+      renderAccessories();
+      document.getElementById("accCoins").textContent = coins;
+      renderAchievements();
+    }
+
+    function addScore(points) {
+      score += points;
+      const gain = points * COINS_PER_POINT * (skillLeft.double > 0 ? 2 : 1);
+      coins += gain;
+      runCoins += gain;
+
+      const newLevel = levelFor(score);
+      if (newLevel > level) {
+        level = newLevel;
+        levelUpUntil = performance.now() + 1800;
+      }
+      if (score > best) best = score;
+
+      stats.totalScore += points;
+      if (score > stats.bestRun) stats.bestRun = score;
+      if (level > stats.bestLevel) stats.bestLevel = level;
+      checkAchievements();
+
+      updateHud();
+      return gain;
+    }
+
+
+    // ---- Skills in the game ----
+    function useSkill(i) {
+      if (screen !== "game" || state !== "playing") return;
+      const sk = skills[i];
+      if (!sk) return;
+      if (skillCounts[sk.id] <= 0) return;
+      if (skillLeft[sk.id] > 0) return;
+      skillCounts[sk.id]--;
+      skillLeft[sk.id] = sk.duration;
+      stats.skillsUsed[sk.id] = true;
+      checkAchievements();
+      if (sk.id === "lucky" && !goldenActive) {
+        const p = pads.find(x => x.id > fr.pad.id && x.x > fr.x + 80);
+        if (p) {
+          goldenActive = true;
+          addItem("golden", p.x, SURF - 70);
+        }
+      }
+    }
+
+    function unclaimedCount() {
+      return ACH.filter(a => achDone[a.id] && !achClaimed[a.id]).length;
+    }
+
+    function updateBadge() {
+      const n = unclaimedCount();
+      const el = document.getElementById("achBadge");
+      el.textContent = n;
+      el.classList.toggle("hidden", n === 0);
+    }
+
+    function showToast(text) {
+      toastQueue.push(text);
+      if (!toastBusy) nextToast();
+    }
+
+    function nextToast() {
+      const el = document.getElementById("toast");
+      if (!toastQueue.length) {
+        toastBusy = false;
+        return;
+      }
+      toastBusy = true;
+      el.textContent = toastQueue.shift();
+      el.classList.add("show");
+      setTimeout(function () {
+        el.classList.remove("show");
+        setTimeout(nextToast, 400);
+      }, 3200);
+    }
+
+    function checkAchievements() {
+      let changed = false;
+      for (const a of ACH) {
+        if (!achDone[a.id] && a.value() >= a.goal) {
+          achDone[a.id] = true;
+          changed = true;
+          showToast("Achievement: " + a.name + " (+" + a.reward + " coins to claim)");
+        }
+      }
+      if (changed) updateBadge();
+    }
+
+    function claimAch(a) {
+      if (!achDone[a.id] || achClaimed[a.id]) return;
+      achClaimed[a.id] = true;
+      coins += a.reward;
+      showMsg("achMsg", "+" + a.reward + " coins! (" + a.name + ")");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function claimAllAch() {
+      let total = 0;
+      for (const a of ACH) {
+        if (achDone[a.id] && !achClaimed[a.id]) {
+          achClaimed[a.id] = true;
+          coins += a.reward;
+          total += a.reward;
+        }
+      }
+      if (total > 0) showMsg("achMsg", "+" + total + " coins!");
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderAchievements() {
+      const list = document.getElementById("achList");
+      list.innerHTML = "";
+
+      const doneCount = ACH.filter(a => achDone[a.id]).length;
+      document.getElementById("achSummary").textContent = "Earned " + doneCount + " of " + ACH.length;
+      document.getElementById("achCoins").textContent = coins;
+
+      const waiting = unclaimedCount();
+      const allBtn = document.getElementById("claimAll");
+      allBtn.classList.toggle("hidden", waiting < 2);
+      allBtn.textContent = "Claim all (" + waiting + ")";
+
+      // Rewards to claim first, then the ones still to earn, then the ones already claimed
+      const rank = a => (achDone[a.id] && !achClaimed[a.id]) ? 0 : (achClaimed[a.id] ? 2 : 1);
+      const sorted = ACH.map((a, i) => ({ a: a, i: i }))
+                        .sort((p, q) => rank(p.a) - rank(q.a) || p.i - q.i)
+                        .map(p => p.a);
+
+      for (const a of sorted) {
+        const done = !!achDone[a.id];
+        const claimed = !!achClaimed[a.id];
+        const unit = a.unit || "";
+        const shown = done ? a.goal : Math.min(a.value(), a.goal);
+
+        const row = document.createElement("div");
+        row.className = "achRow" + (done && !claimed ? " ready" : "") + (claimed ? " claimed" : "");
+
+        const icon = document.createElement("div");
+        icon.className = "achIcon";
+        icon.textContent = done ? "★" : "☆";
+
+        const mid = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = a.name;
+        const desc = document.createElement("small");
+        desc.textContent = a.desc;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const fill = document.createElement("div");
+        fill.style.width = Math.round(100 * shown / a.goal) + "%";
+        bar.appendChild(fill);
+        const prog = document.createElement("small");
+        prog.textContent = shown + " / " + a.goal + unit + "  -  Reward: " + a.reward + " coins";
+        mid.appendChild(name);
+        mid.appendChild(desc);
+        mid.appendChild(bar);
+        mid.appendChild(prog);
+
+        row.appendChild(icon);
+        row.appendChild(mid);
+
+        if (done && !claimed) {
+          const btn = document.createElement("button");
+          btn.className = "claimBtn";
+          btn.textContent = "Claim +" + a.reward;
+          btn.addEventListener("click", function () { claimAch(a); });
+          row.appendChild(btn);
+        } else {
+          const st = document.createElement("div");
+          st.className = "achStatus";
+          st.textContent = claimed ? "Claimed" : "";
+          row.appendChild(st);
+        }
+
+        list.appendChild(row);
+      }
+
+      updateBadge();
+    }
+
+    function setAchOpen(v) {
+      achOpen = v;
+      document.getElementById("achBody").classList.toggle("hidden", !v);
+      document.getElementById("achArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderAchievements();
+    }
+
+
+    // ---- Crash and Continue? ----
+    function onCrash() {
+      dead = true;
+      fr.charging = false; fr.charge = 0;
+      saveAll();
+      if (continuesUsed < CONTINUE_COSTS.length) setState("continue");
+      else setState("over");
+    }
+
+    function doContinue() {
+      if (state !== "continue") return;
+      const cost = CONTINUE_COSTS[continuesUsed];
+      if (cost === undefined || coins < cost) return;
+
+      coins -= cost;
+      continuesUsed++;
+      stats.continues++;
+      surviveMs = 0;
+      checkAchievements();
+      saveAll();
+
+      // The frog sits on the nearest pad ahead, and the dangerous things around are cleared
+      let target = pads.find(p => !p.sunk && p.x > camX + 150);
+      if (!target) target = pads[pads.length - 1];
+      target.sunk = false;
+      camX = Math.max(camX, target.x - 250);
+      enemies = [];
+      dead = false;
+      fr = { mode: "sit", x: target.x, y: SURF, vx: 0, vy: 0, pad: target, charge: 0, charging: false, land: 0 };
+      target.stand = 8;
+      lastScoredPad = Math.max(lastScoredPad, target.id);
+      invul = 2.4;
+      enemyTimer = 4;
+      resumed = true;
+      setState("ready");
+      updateHud();
+    }
+
+    function giveUp() {
+      if (state !== "continue") return;
+      setState("over");
+    }
+
+    function showMsg(id, text) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      clearTimeout(msgTimers[id]);
+      msgTimers[id] = setTimeout(function () { el.textContent = ""; }, 2500);
+    }
+
+    function setSkinsOpen(v) {
+      skinsOpen = v;
+      document.getElementById("skinsBody").classList.toggle("hidden", !v);
+      document.getElementById("skinsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderShop();
+    }
+
+    function setSkillsOpen(v) {
+      skillsOpen = v;
+      document.getElementById("skillsBody").classList.toggle("hidden", !v);
+      document.getElementById("skillsArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderSkillShop();
+    }
+
+    function onSkinClick(skin) {
+      if (ownedSkins.includes(skin.id)) {
+        equippedSkin = skin.id;
+        showMsg("skinMsg", skin.name + " equipped!");
+      } else if (coins >= skin.price) {
+        coins -= skin.price;
+        ownedSkins.push(skin.id);
+        checkAchievements();
+        equippedSkin = skin.id;
+        showMsg("skinMsg", "You bought " + skin.name + "!");
+      } else {
+        showMsg("skinMsg", "Not enough coins. You need " + (skin.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function onBuySkill(sk) {
+      if (coins >= sk.price) {
+        coins -= sk.price;
+        skillCounts[sk.id]++;
+        showMsg("skillMsg", "You bought " + sk.name + "! You own " + skillCounts[sk.id] + ".");
+      } else {
+        showMsg("skillMsg", "Not enough coins. You need " + (sk.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderShop() {
+      const shop = document.getElementById("shop");
+      shop.innerHTML = "";
+      skinPreviews = [];
+
+      skins.forEach(function (skin, idx) {
+        const owned = ownedSkins.includes(skin.id);
+        const equipped = equippedSkin === skin.id;
+
+        const card = document.createElement("button");
+        card.className = "card" + (equipped ? " equipped" : "") +
+                         (!owned && coins < skin.price ? " cant" : "");
+
+        const cv = document.createElement("canvas");
+        cv.className = "preview";
+        cv.width = 180;
+        cv.height = 46;
+
+        const name = document.createElement("div");
+        name.textContent = skin.name;
+        name.style.fontWeight = "bold";
+
+        const status = document.createElement("small");
+        if (equipped) status.textContent = "Equipped";
+        else if (owned) status.textContent = "Click to equip";
+        else if (skin.price === 0) status.textContent = "Free";
+        else status.textContent = skin.price + " coins";
+
+        card.appendChild(cv);
+        card.appendChild(name);
+        card.appendChild(status);
+        card.addEventListener("click", function () { onSkinClick(skin); });
+        shop.appendChild(card);
+
+        skinPreviews.push({ skin: skin, idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function renderSkillShop() {
+      const list = document.getElementById("skillList");
+      list.innerHTML = "";
+      skillPreviews = [];
+
+      skills.forEach(function (sk, idx) {
+        const row = document.createElement("div");
+        row.className = "skillRow";
+
+        const cv = document.createElement("canvas");
+        cv.className = "skillPrev";
+        cv.width = 48;
+        cv.height = 48;
+
+        const info = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = sk.name;
+        const sub = document.createElement("small");
+        sub.textContent = "You own: " + skillCounts[sk.id] + "  -  Key " + (idx + 1);
+        info.appendChild(name);
+        info.appendChild(sub);
+
+        const buy = document.createElement("button");
+        buy.className = "buyBtn" + (coins < sk.price ? " cant" : "");
+        buy.textContent = "Buy " + sk.price;
+        buy.addEventListener("click", function () { onBuySkill(sk); });
+
+        const i = document.createElement("button");
+        i.className = "infoBtn";
+        i.textContent = "i";
+        i.title = "What does it do?";
+
+        const desc = document.createElement("div");
+        desc.className = "skillDesc" + (infoOpen[sk.id] ? "" : " hidden");
+        desc.textContent = sk.desc;
+
+        i.addEventListener("click", function () {
+          infoOpen[sk.id] = !infoOpen[sk.id];
+          desc.classList.toggle("hidden", !infoOpen[sk.id]);
+          i.blur();
+        });
+
+        row.appendChild(cv);
+        row.appendChild(info);
+        row.appendChild(buy);
+        row.appendChild(i);
+        row.appendChild(desc);
+        list.appendChild(row);
+
+        skillPreviews.push({ skill: sk, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    function buildSkillBar() {
+      const bar = document.getElementById("skillBar");
+      bar.innerHTML = "";
+      skillSlots = [];
+      skills.forEach(function (sk, idx) {
+        const cv = document.createElement("canvas");
+        cv.className = "skillIcon";
+        cv.width = 64;
+        cv.height = 64;
+        cv.title = sk.name + " (key " + (idx + 1) + ")";
+        cv.addEventListener("click", function () { useSkill(idx); });
+        bar.appendChild(cv);
+        skillSlots.push({ idx: idx, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+    document.getElementById("legend").textContent =
+      "Fly " + POINTS.fly + " pt - Golden fly " + POINTS.golden +
+      " pts. 1 point = " + COINS_PER_POINT + " coin.";
+    document.getElementById("skillsLegend").textContent =
+      "Each purchase gives you one use. In the game, press 1-6 (or tap the icon).";
+    document.getElementById("skillsLegend").style.cssText = "font-size:12px;color:#aab;margin-bottom:8px;";
+
+    document.getElementById("skinsHead").addEventListener("click", function () {
+      this.blur();
+      setSkinsOpen(!skinsOpen);
+    });
+    document.getElementById("skillsHead").addEventListener("click", function () {
+      this.blur();
+      setSkillsOpen(!skillsOpen);
+    });
+    document.getElementById("accHead").addEventListener("click", function () {
+      this.blur();
+      setAccOpen(!accOpen);
+    });
+    document.getElementById("achHead").addEventListener("click", function () {
+      this.blur();
+      setAchOpen(!achOpen);
+    });
+    document.getElementById("claimAll").addEventListener("click", claimAllAch);
+    document.getElementById("startBtn").addEventListener("click", function () {
+      this.blur();
+      startGame();
+    });
+    document.getElementById("menuBtn").addEventListener("click", function () {
+      this.blur();
+      goMenu();
+    });
+    document.getElementById("continueBtn").addEventListener("click", function () {
+      this.blur();
+      doContinue();
+    });
+    document.getElementById("restartBtn").addEventListener("click", function () {
+      this.blur();
+      if (state === "continue") giveUp();
+      else if (state === "over") resetGame();
+    });
+
+
+    // ---- Controls ----
+    function startRun() {
+      if (state === "ready") {
+        resumed = false;
+        setState("playing");
+      }
+    }
+
+    // Press (Space, mouse or touch): charge the jump.  Let go: jump!
+    function chargeStart() {
+      if (screen !== "game") return;
+      if (state === "ready") { startRun(); return; }
+      if (state !== "playing") return;
+      if (fr.mode === "sit" && !dead) {
+        fr.charging = true;
+        fr.charge = 0;
+      }
+    }
+
+    function chargeEnd() {
+      if (!fr.charging) return;
+      fr.charging = false;
+      if (state !== "playing" || fr.mode !== "sit") { fr.charge = 0; return; }
+      const v = V_MIN + (V_MAX - V_MIN) * fr.charge;
+      jump(v);
+      fr.charge = 0;
+    }
+
+    function jump(v) {
+      const p = fr.pad;
+      if (p) p.stand = null;
+      fr.mode = "air";
+      fr.pad = null;
+      fr.vx = v * Math.cos(ANGLE);
+      fr.vy = -v * Math.sin(ANGLE);
+      fr.y = SURF - 1;
+      burst(fr.x - camX, SURF, "#cfeec0", 5);
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (screen === "menu") {
+        if (event.key === "Escape" && (skinsOpen || skillsOpen || achOpen || accOpen)) {
+          setAccOpen(false);
+          setSkinsOpen(false);
+          setSkillsOpen(false);
+          setAchOpen(false);
+          return;
+        }
+        const onButton = document.activeElement instanceof HTMLButtonElement;
+        if (event.key === "Enter" && !onButton) startGame();
+        return;
+      }
+
+      const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", " "];
+      if (keys.includes(event.key)) event.preventDefault();
+
+      if (/^[1-6]$/.test(event.key)) {
+        useSkill(Number(event.key) - 1);
+        return;
+      }
+
+      if ((event.key === "m" || event.key === "M" || event.key === "Escape") && state !== "playing") {
+        goMenu();
+        return;
+      }
+
+      if (state === "continue") {
+        if (event.key === "c" || event.key === "C") doContinue();
+        if (event.key === " ") giveUp();
+        return;
+      }
+
+      if (state === "over") {
+        if (event.key === " ") resetGame();
+        return;
+      }
+
+      if (event.key === " " || event.key === "ArrowUp" || event.key === "ArrowRight" || event.key === "w" || event.key === "W") {
+        if (!event.repeat) chargeStart();
+      }
+    });
+
+    document.addEventListener("keyup", function (event) {
+      if (event.key === " " || event.key === "ArrowUp" || event.key === "ArrowRight" || event.key === "w" || event.key === "W") chargeEnd();
+    });
+    window.addEventListener("blur", function () { chargeEnd(); });
+
+    // Touch and mouse: hold the game to charge, let go to jump
+    canvas.style.touchAction = "none";
+    canvas.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      chargeStart();
+    });
+    canvas.addEventListener("pointerup", function (e) { chargeEnd(); });
+    canvas.addEventListener("pointercancel", function (e) { chargeEnd(); });
+
+    // ---- Lily pads ----
+    function padX(p) {
+      return p.amp ? p.x + p.amp * Math.sin(worldTime * p.w + p.ph) : p.x;
+    }
+
+    // the jump speed that lands exactly dx further (same height)
+    function speedFor(dx) {
+      return Math.sqrt(Math.max(0, dx) * G / SIN2A);
+    }
+
+    function addPad(initial) {
+      const prev = pads[pads.length - 1];
+      const lv = initial ? 1 : level;
+      const r = Math.max(34, 62 - lv * 2.6) * (0.88 + Math.random() * 0.26);
+      const amp = (lv >= 3 && Math.random() < Math.min(0.6, 0.15 + (lv - 3) * 0.08)) ? 18 + Math.random() * Math.min(40, 12 + lv * 4) : 0;
+      const gMin = prev.r + r + 34 + prev.amp + amp;
+      const gMax = Math.max(gMin + 20, Math.min(345, 190 + (lv - 1) * 17) - amp * 1.4);
+      const gap = gMin + Math.random() * (gMax - gMin);
+      const p = {
+        id: padCounter++, x: prev.x + gap, r: r, amp: amp, w: 0.9 + Math.random() * 0.8, ph: Math.random() * 6,
+        stand: null, standMax: Math.max(1.5, 4.6 - lv * 0.3), sink: 0, sunk: false, flower: Math.random() < 0.25
+      };
+      pads.push(p);
+
+      // flies on the REAL jump arc: jump at the right power and you fly through them
+      const n = 2 + (Math.random() < 0.45 ? 1 : 0);
+      const v = speedFor(p.x - prev.x);
+      const T = 2 * v * Math.sin(ANGLE) / G;
+      for (let i = 0; i < n; i++) {
+        const t = T * (0.28 + 0.44 * (i / (n - 1)));
+        addItem("fly", prev.x + v * Math.cos(ANGLE) * t, SURF - 22 - (v * Math.sin(ANGLE) * t - 0.5 * G * t * t));
+      }
+      // golden fly: only one at a time
+      if (!initial && !goldenActive && (skillLeft.lucky > 0 || eatenCount >= SPECIAL_EVERY)) {
+        goldenActive = true;
+        eatenCount = 0;
+        addItem("golden", p.x, SURF - 78);
+      }
+      return p;
+    }
+
+    function addItem(type, x, y) {
+      items.push({ type: type, x: x, y: y, phase: Math.random() * 6 });
+    }
+
+    // ---- Particles ----
+    function burst(x, y, color, n) {
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 60 + Math.random() * 160;
+        particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, life: 0.5 + Math.random() * 0.3, max: 0.8, color: color });
+      }
+    }
+
+    function floatText(x, y, text, color) {
+      particles.push({ x: x, y: y, vx: 0, vy: -50, life: 0.9, max: 0.9, color: color, text: text });
+    }
+
+    function updateParticles(dt) {
+      for (const p of particles) {
+        p.life -= dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        if (!p.text) p.vy += 500 * dt;
+      }
+      particles = particles.filter(p => p.life > 0);
+    }
+
+
+    // ---- Enemies ----
+    // dragon = a dragonfly flying across, fish = leaps out of the water (warning bubbles first), bird = flies low over the pads (jump over it!)
+    function spawnEnemy() {
+      const types = ["dragon"];
+      if (level >= 3) types.push("fish", "fish");
+      if (level >= 5) types.push("bird");
+      const t = types[Math.floor(Math.random() * types.length)];
+      if (t === "dragon") {
+        enemies.push({ type: "dragon", x: camX + W + 70, y: 120 + Math.random() * 170, vx: -(190 + Math.random() * 70 + level * 6), ph: Math.random() * 6 });
+      } else if (t === "fish") {
+        // it jumps where you want to land: on the next pad (or where you sit)
+        let tp = pads.find(p => !p.sunk && p.x > fr.x + 60 && p.x < camX + W - 40);
+        if (!tp || (fr.mode === "sit" && Math.random() < 0.3)) tp = fr.pad || pads[0];
+        enemies.push({ type: "fish", x: padX(tp), y: SURF + 40, vy: 0, warn: Math.max(0.85, 1.5 - level * 0.07), leap: false });
+      } else {
+        enemies.push({ type: "bird", x: camX + W + 90, y: SURF - 44, vx: -(430 + level * 8), warn: 1.0 });
+      }
+    }
+
+    function enemyHit(e) {
+      // the middle of the frog's body
+      const bx = fr.x, by = fr.y - 22;
+      if (e.type === "dragon") return Math.hypot(e.x - bx, e.y - by) < 40;
+      if (e.type === "fish") return e.leap && Math.hypot(e.x - bx, e.y - 10 - by) < 42;
+      return e.warn <= 0 && Math.abs(e.x - bx) < 44 && Math.abs(e.y - by) < 36;
+    }
+
+    // ---- Game logic ----
+    function collect(it) {
+      if (it.type === "golden") {
+        stats.golden++;
+        goldenActive = false;
+        const g = addScore(POINTS.golden);
+        burst(it.x - camX, it.y, "#ffd54a", 14);
+        floatText(it.x - camX, it.y - 14, "+" + g, "#ffd54a");
+      } else {
+        stats.flies++;
+        eatenCount++;
+        const g = addScore(POINTS.fly);
+        burst(it.x - camX, it.y, "#e9f7a8", 7);
+        floatText(it.x - camX, it.y - 14, "+" + g, "#fff3a8");
+      }
+    }
+
+    function protect(x, y) {
+      shieldFlashUntil = performance.now() + 450;
+      burst(x - camX, y, "#8fd18b", 16);
+    }
+
+    // The frog came down on the water line: is there a lily pad under it?
+    function landOrSplash() {
+      let hit = null, hd = 1e9;
+      for (const p of pads) {
+        if (p.sunk) continue;
+        const d = Math.abs(fr.x - padX(p));
+        if (d < p.r * 0.92 && d < hd) { hit = p; hd = d; }
+      }
+      if (hit) {
+        fr.mode = "sit";
+        fr.pad = hit;
+        fr.y = SURF;
+        fr.vx = 0; fr.vy = 0;
+        fr.land = 1;
+        hit.stand = hit.standMax;
+        if (hit.id > lastScoredPad) {
+          lastScoredPad = hit.id;
+          stats.hops++;
+          const perfect = hd < hit.r * 0.28;
+          let pts = 1;
+          if (perfect) { stats.perfects++; pts = 3; }
+          const g = addScore(pts);
+          floatText(fr.x - camX, SURF - 60, perfect ? "Perfect! +" + g : "+" + g, perfect ? "#ffe066" : "#fff");
+        }
+        burst(fr.x - camX, SURF, "#bfe6ff", 6);
+        return true;
+      }
+      // splash!
+      if (skillLeft.shield > 0 || invul > 0) {
+        if (skillLeft.shield > 0) protect(fr.x, SURF);
+        fr.y = SURF - 2;
+        fr.vy = -950;
+        fr.vx = Math.max(fr.vx, 150);
+        burst(fr.x - camX, WATER_Y, "#9fdcf0", 12);
+        return false;
+      }
+      burst(fr.x - camX, WATER_Y, "#9fdcf0", 24);
+      onCrash();
+      return false;
+    }
+
+    function update(dtReal) {
+      const dt = dtReal * (skillLeft.slow > 0 ? SLOW_FACTOR : 1);
+      worldTime += dt;
+      if (invul > 0) invul -= dtReal;
+      if (fr.land > 0) fr.land = Math.max(0, fr.land - dt * 5);
+
+      // charging
+      if (fr.charging && fr.mode === "sit") fr.charge = Math.min(1, fr.charge + dtReal / CHARGE_TIME);
+
+      // the frog moves with its pad
+      if (fr.mode === "sit" && fr.pad) fr.x = padX(fr.pad);
+
+      // the camera follows the frog
+      const tx = Math.max(0, fr.x - 250);
+      camX += (tx - camX) * Math.min(1, dt * 4.5);
+
+      // the pad under the frog slowly sinks
+      for (const p of pads) {
+        if (p.sunk) continue;
+        if (fr.mode === "sit" && fr.pad === p && p.stand !== null) {
+          p.stand -= dt;
+          p.sink = Math.max(p.sink, 1 - Math.max(0, p.stand) / p.standMax);
+          if (p.stand <= 0) {
+            if (skillLeft.shield > 0 || invul > 0) {
+              if (skillLeft.shield > 0) protect(fr.x, SURF);
+              p.stand = p.standMax; p.sink = 0;
+            } else {
+              p.sunk = true;
+              burst(fr.x - camX, WATER_Y, "#9fdcf0", 24);
+              onCrash();
+              return;
+            }
+          }
+        } else {
+          p.sink = Math.max(0, p.sink - dt * 1.5);
+        }
+      }
+
+      // jumping
+      if (fr.mode === "air") {
+        const steps = Math.max(1, Math.ceil(dt / (1 / 120)));
+        const h = dt / steps;
+        for (let i = 0; i < steps; i++) {
+          fr.vy += G * h;
+          fr.x += fr.vx * h;
+          fr.y += fr.vy * h;
+          if (fr.vy > 0 && fr.y >= SURF) {
+            landOrSplash();
+            if (dead) return;
+            break;
+          }
+        }
+      }
+
+      if (fr.x > maxX) maxX = fr.x;
+      dist = (maxX - startX) / PX_PER_METER;
+      if (dist > stats.bestDist) stats.bestDist = dist;
+
+      // more pads ahead
+      while (pads[pads.length - 1].x < camX + W + 700) addPad(false);
+      while (pads.length > 5 && pads[1].x < camX - 300 && (!fr.pad || fr.pad !== pads[0])) pads.shift();
+
+      // enemies (from level 2 on, one at a time)
+      enemyTimer -= dt;
+      if (level >= 2 && enemyTimer <= 0 && enemies.length === 0) {
+        spawnEnemy();
+        enemyTimer = Math.max(1.0, 3.4 - level * 0.22) + Math.random() * 1.6;
+      }
+      const ghost = skillLeft.ghost > 0;
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (e.type === "dragon") {
+          e.x += e.vx * dt;
+          e.y += Math.sin(worldTime * 5 + e.ph) * 24 * dt;
+          if (e.x < camX - 100) { enemies.splice(i, 1); continue; }
+        } else if (e.type === "fish") {
+          if (!e.leap) {
+            e.warn -= dt;
+            if (e.warn <= 0) { e.leap = true; e.vy = -LEAP_V; e.y = SURF + 10; }
+          } else {
+            e.vy += G * dt;
+            e.y += e.vy * dt;
+            if (e.vy > 0 && e.y > SURF + 40) { enemies.splice(i, 1); continue; }
+          }
+        } else {
+          if (e.warn > 0) { e.warn -= dt; e.x = camX + W + 90; }
+          else e.x += e.vx * dt;
+          if (e.x < camX - 120) { enemies.splice(i, 1); continue; }
+        }
+        if (ghost || invul > 0) continue;
+        if (enemyHit(e)) {
+          if (skillLeft.shield > 0) {
+            protect(e.x, e.y);
+            enemies.splice(i, 1);
+          } else {
+            burst(fr.x - camX, fr.y - 22, "#ff8a65", 14);
+            onCrash();
+            return;
+          }
+        }
+      }
+
+      // flies
+      const bx = fr.x, by = fr.y - 22;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const it = items[i];
+        if (skillLeft.magnet > 0 && Math.hypot(it.x - bx, it.y - by) < MAGNET_RANGE) {
+          const k = Math.min(1, dt * 7);
+          it.x += (bx - it.x) * k;
+          it.y += (by - it.y) * k;
+        }
+        if (Math.hypot(it.x - bx, it.y - by) < 36) {
+          items.splice(i, 1);
+          collect(it);
+        } else if (it.x < camX - 80) {
+          if (it.type === "golden") goldenActive = false;
+          items.splice(i, 1);
+        }
+      }
+    }
+
+    function ell(g, x, y, rx, ry, rot) {
+      g.beginPath();
+      g.ellipse(x, y, rx, ry, rot || 0, 0, Math.PI * 2);
+    }
+
+    // fill + soft outline (so a white rabbit is also visible on a light background)
+    function fo(g) {
+      g.fill();
+      g.stroke();
+    }
+
+    // A fluffy shape: lots of little round bumps around an ellipse
+    function fluff(g, cx, cy, rx, ry, n, r) {
+      for (let a = 0; a < n; a++) {
+        const t = a / n * Math.PI * 2;
+        ell(g, cx + Math.cos(t) * rx, cy + Math.sin(t) * ry, r, r);
+        fo(g);
+      }
+      ell(g, cx, cy, rx, ry);
+      g.fill();
+    }
+
+
+    // ---- Drawing: the frog ----
+    function frogCols(skin) {
+      return {
+        style: skin.style,
+        base: hsl(skin.base), light: hsl(skin.base, 12), dark: hsl(skin.base, -16),
+        belly: hsl(skin.belly), spot: hsl(skin.spot), eye: hsl(skin.eye),
+        toe: skin.style === "redeye" ? "hsl(24,95%,55%)" : hsl(skin.base, 8)
+      };
+    }
+
+    function drawFrogHeadAcc(g, id) {
+      if (id === "flower") {
+        g.fillStyle = "#ff8fb8";
+        for (let i = 0; i < 5; i++) {
+          const a = i / 5 * Math.PI * 2 - Math.PI / 2;
+          ell(g, Math.cos(a) * 5.5, -5 + Math.sin(a) * 5.5, 4.4, 3, a); g.fill();
+        }
+        g.fillStyle = "#ffe066"; ell(g, 0, -5, 2.6, 2.6); g.fill();
+      } else if (id === "party") {
+        g.fillStyle = "#ec5a9a";
+        g.beginPath(); g.moveTo(-8, 0); g.lineTo(0, -22); g.lineTo(8, 0); g.closePath(); g.fill();
+        g.fillStyle = "#ffe066";
+        g.fillRect(-6, -6, 12, 3);
+        g.beginPath(); g.arc(0, -23, 2.8, 0, Math.PI * 2); g.fill();
+      } else if (id === "tophat") {
+        g.fillStyle = "#222";
+        g.fillRect(-9, -20, 18, 18);
+        ell(g, 0, 0, 14, 3.6); g.fill();
+        g.fillStyle = "#c83030"; g.fillRect(-9, -7, 18, 3.4);
+      } else if (id === "crown") {
+        g.fillStyle = "#ffd54a";
+        g.strokeStyle = "#b8860b"; g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(-10, 0); g.lineTo(-10, -11); g.lineTo(-5, -6); g.lineTo(0, -13); g.lineTo(5, -6); g.lineTo(10, -11); g.lineTo(10, 0);
+        g.closePath(); g.fill(); g.stroke();
+        g.fillStyle = "#e8483e"; g.beginPath(); g.arc(0, -4, 2, 0, Math.PI * 2); g.fill();
+      }
+    }
+
+    function drawFrogFaceAcc(g, id) {
+      if (id === "glasses") {
+        g.strokeStyle = "#333"; g.lineWidth = 1.8;
+        g.fillStyle = "rgba(200,230,255,0.35)";
+        for (const x of [-7, 7]) { ell(g, x, 0, 6, 6); g.fill(); g.stroke(); }
+        g.beginPath(); g.moveTo(-1, 0); g.lineTo(1, 0); g.stroke();
+      } else if (id === "shades") {
+        g.fillStyle = "#111";
+        ell(g, -7, 0, 6.4, 5); g.fill();
+        ell(g, 7, 0, 6.4, 5); g.fill();
+        g.fillRect(-2, -2, 4, 2);
+        g.fillStyle = "rgba(255,255,255,0.35)";
+        ell(g, -9, -1.5, 2, 1, -0.5); g.fill();
+        ell(g, 5, -1.5, 2, 1, -0.5); g.fill();
+      }
+    }
+
+    function drawFrogNeckAcc(g, id) {
+      if (id === "bowtie") {
+        g.fillStyle = "#d9344b";
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(-9, -5); g.lineTo(-9, 5); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(9, -5); g.lineTo(9, 5); g.closePath(); g.fill();
+        g.fillStyle = "#a4182c"; ell(g, 0, 0, 2.8, 3.2); g.fill();
+      } else if (id === "scarf") {
+        g.fillStyle = "#3f7fd0";
+        g.strokeStyle = "rgba(0,0,0,0.25)"; g.lineWidth = 1;
+        ell(g, 0, 0, 12, 4.4, 0.1); g.fill(); g.stroke();
+        g.fillStyle = "#e8483e";
+        g.fillRect(-12, 1, 4, 11); g.fillRect(-7, 1, 3, 8);
+        g.fillStyle = "#fff"; g.fillRect(-12, 5, 4, 2);
+      }
+    }
+
+    function drawFrogBodyAcc(g, id, back, ph) {
+      if (id === "vest" && !back) {
+        g.fillStyle = "#2f8f5a";
+        g.strokeStyle = "rgba(0,0,0,0.3)"; g.lineWidth = 1;
+        ell(g, 0, 0, 16, 11); g.fill(); g.stroke();
+        g.fillStyle = "#ffd54a";
+        for (const x of [-4, 4]) { g.beginPath(); g.arc(x, 0, 1.6, 0, Math.PI * 2); g.fill(); }
+      } else if (id === "cape" && back) {
+        const w = Math.sin(ph * 6) * 2;
+        g.fillStyle = "#d9344b";
+        g.beginPath();
+        g.moveTo(10, -12); g.quadraticCurveTo(-8, -24 + w, -44, -10 + w * 2); g.lineTo(-38, 14 + w); g.quadraticCurveTo(-12, 16, 10, 8); g.closePath(); g.fill();
+        g.strokeStyle = "rgba(0,0,0,0.25)"; g.lineWidth = 1; g.stroke();
+        g.fillStyle = "#ffd54a"; g.beginPath(); g.arc(8, 2, 2.2, 0, Math.PI * 2); g.fill();
+      }
+    }
+
+    // o: scale, rot (tilt in the air), crouch (0..1), mode ("sit" or "air"), alpha, dead, acc, phase, land
+    // (x, y) = the middle of the feet. The frog looks to the right.
+    function drawFrog(g, x, y, skin, time, o) {
+      const c = frogCols(skin);
+      const sc = o.scale || 1;
+      const acc = o.acc || {};
+      const air = o.mode === "air";
+      const cr = Math.max(0, Math.min(1, o.crouch || 0));
+      const ph = o.phase || 0;
+      const squash = (o.land || 0) * 0.12;
+      g.save();
+      if (o.alpha !== undefined) g.globalAlpha = o.alpha;
+      else if (skin.style === "glass") g.globalAlpha = 0.86;
+      g.translate(x, y);
+      g.scale(sc * (1 + squash), sc * (1 - squash));
+      g.rotate(o.rot || 0);
+      g.lineJoin = "round"; g.lineCap = "round";
+      const out = "rgba(20,50,20,0.45)";
+      const by = air ? -26 : -23 + cr * 7;       // the middle of the body
+      const breathe = air ? 0 : Math.sin(ph * 3) * 0.8;
+
+      if (acc.body) { g.save(); g.translate(0, by); drawFrogBodyAcc(g, acc.body, true, ph); g.restore(); }
+
+      // back leg (far side is hidden behind the body)
+      g.strokeStyle = out; g.lineWidth = 1.4; g.fillStyle = c.dark;
+      if (air) {
+        // stretched out behind
+        g.strokeStyle = c.dark; g.lineWidth = 7;
+        g.beginPath(); g.moveTo(-14, by + 4); g.lineTo(-30, by + 10); g.lineTo(-52, by + 16); g.stroke();
+        g.strokeStyle = c.base; g.lineWidth = 4.6;
+        g.beginPath(); g.moveTo(-14, by + 4); g.lineTo(-30, by + 10); g.lineTo(-52, by + 16); g.stroke();
+        g.fillStyle = c.toe; g.strokeStyle = out; g.lineWidth = 1.2;
+        ell(g, -57, by + 18, 7, 2.6, 0.3); fo(g);
+      } else {
+        g.fillStyle = c.dark; ell(g, -17, by + 6, 15, 10 - cr * 2, -0.35); fo(g);
+        g.fillStyle = c.toe; ell(g, -3 + cr * 3, -3, 14, 3.6); fo(g);
+      }
+
+      // body
+      g.fillStyle = c.base; g.strokeStyle = out; g.lineWidth = 1.5;
+      ell(g, 0, by, 26 + cr * 2, 17 - cr * 3 + breathe); fo(g);
+      g.fillStyle = c.belly;
+      ell(g, 6, by + 6, 17, 8); g.fill();
+      // markings
+      if (skin.style === "spots") {
+        g.fillStyle = c.spot;
+        for (const p of [[-12, -8, 3.4], [-2, -11, 3], [8, -9, 3.4], [-17, 0, 2.6], [-6, -2, 2.4], [4, -3, 2.8]]) { ell(g, p[0], by + p[1], p[2], p[2]); g.fill(); }
+      } else if (skin.style === "toad") {
+        g.fillStyle = c.spot;
+        for (const p of [[-14, -8], [-6, -11], [3, -10], [-10, -1], [-1, -4], [8, -6], [-18, 2]]) { ell(g, p[0], by + p[1], 2.3, 1.7); g.fill(); }
+      } else if (skin.style === "plain" || skin.style === "redeye") {
+        g.fillStyle = c.spot; g.globalAlpha *= 0.5;
+        for (const p of [[-10, -10, 2.2], [0, -12, 1.8], [-16, -4, 1.8]]) { ell(g, p[0], by + p[1], p[2], p[2]); g.fill(); }
+        g.globalAlpha /= 0.5;
+      } else if (skin.style === "glass") {
+        g.fillStyle = "rgba(220,70,70,0.75)"; ell(g, -2, by + 2, 3, 3); g.fill();
+        g.strokeStyle = "rgba(255,255,255,0.5)"; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(-14, by - 4); g.quadraticCurveTo(-2, by - 12, 10, by - 4); g.stroke();
+      }
+      if (acc.body) { g.save(); g.translate(-2, by + 1); drawFrogBodyAcc(g, acc.body, false, ph); g.restore(); }
+
+      // front leg
+      g.strokeStyle = c.dark; g.lineWidth = 6.4;
+      g.beginPath();
+      if (air) { g.moveTo(16, by + 8); g.lineTo(30, by + 14); g.lineTo(38, by + 12); }
+      else { g.moveTo(14, by + 8); g.lineTo(20 + cr * 2, by + 14 + cr * 2); g.lineTo(24 + cr * 2, -2); }
+      g.stroke();
+      g.strokeStyle = c.base; g.lineWidth = 4.2; g.stroke();
+      g.fillStyle = c.toe; g.strokeStyle = out; g.lineWidth = 1.2;
+      if (air) { ell(g, 41, by + 12, 4.4, 2.4, 0.3); fo(g); } else { ell(g, 27 + cr * 2, -1.6, 6.2, 2.6); fo(g); }
+
+      // head
+      const hx = 17, hy = by - 4;
+      g.fillStyle = c.base; g.strokeStyle = out; g.lineWidth = 1.5;
+      ell(g, hx, hy, 17, 12.4 - cr * 1.5); fo(g);
+      // throat bubble
+      g.fillStyle = c.belly;
+      ell(g, hx + 5, hy + 8, 10 + (air ? 0 : Math.sin(ph * 4) * 0.8), 4.2); g.fill();
+      // mouth
+      g.strokeStyle = "rgba(30,50,20,0.7)"; g.lineWidth = 1.6;
+      g.beginPath(); g.moveTo(hx + 17, hy + 3); g.quadraticCurveTo(hx + 4, hy + 8, hx - 7, hy + 4); g.stroke();
+      // nostril and cheek
+      g.fillStyle = "rgba(20,40,20,0.7)"; ell(g, hx + 13, hy - 2, 1.1, 0.9); g.fill();
+      if (skin.style === "redeye" || skin.style === "toad" || skin.style === "spots") { g.fillStyle = "rgba(255,120,120,0.28)"; ell(g, hx + 2, hy + 4, 4, 3); g.fill(); }
+
+      // the two big eyes on top of the head
+      for (const e of [[hx + 3, hy - 10.5, 6.6], [hx - 6, hy - 9, 5.6]]) {
+        g.fillStyle = c.base; g.strokeStyle = out; g.lineWidth = 1.3;
+        ell(g, e[0], e[1], e[2] + 1.6, e[2] + 1.2); fo(g);
+        g.fillStyle = c.eye;
+        ell(g, e[0], e[1], e[2], e[2]); g.fill();
+        if (o.dead) {
+          g.strokeStyle = "#222"; g.lineWidth = 1.6;
+          g.beginPath(); g.moveTo(e[0] - 3, e[1] - 3); g.lineTo(e[0] + 3, e[1] + 3); g.moveTo(e[0] + 3, e[1] - 3); g.lineTo(e[0] - 3, e[1] + 3); g.stroke();
+        } else {
+          g.fillStyle = "#111";
+          if (skin.style === "toad") ell(g, e[0] + 0.8, e[1], e[2] * 0.7, e[2] * 0.3); else ell(g, e[0] + 1, e[1], e[2] * 0.45, e[2] * 0.62);
+          g.fill();
+          g.fillStyle = "#fff"; ell(g, e[0] + 1.6, e[1] - 2, 1.4, 1.4); g.fill();
+        }
+      }
+      if (acc.face) { g.save(); g.translate(hx - 1.5, hy - 10); g.scale(0.78, 0.78); drawFrogFaceAcc(g, acc.face); g.restore(); }
+      if (acc.neck) { g.save(); g.translate(hx - 8, hy + 10); drawFrogNeckAcc(g, acc.neck); g.restore(); }
+      if (acc.head) { g.save(); g.translate(hx - 1, hy - 17); g.rotate(0.12); drawFrogHeadAcc(g, acc.head); g.restore(); }
+      g.restore();
+    }
+
+    function drawShieldBubble(g, x, y, time) {
+      const left = skillLeft.shield;
+      if (left < 3000 && Math.floor(time / 150) % 2 === 0) return;   // blinks when ending
+      const flash = performance.now() < shieldFlashUntil;
+      g.save();
+      g.translate(x, y);
+      const r = 46 + Math.sin(time / 250) * 1.5 + (flash ? 7 : 0);
+      g.fillStyle = flash ? "rgba(140,210,255,0.45)" : "rgba(100,180,255,0.18)";
+      g.strokeStyle = flash ? "rgba(255,255,255,0.95)" : "rgba(80,150,230,0.85)";
+      g.lineWidth = flash ? 4 : 2.5;
+      g.beginPath();
+      g.arc(0, 0, r, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+      g.restore();
+    }
+
+    // ---- Drawing: flies, enemies and lily pads ----
+    function drawFlyShape(g, x, y, golden, time, ph) {
+      g.save();
+      g.translate(x, y + Math.sin(time / 260 + ph) * 3);
+      if (golden) {
+        const gl = g.createRadialGradient(0, 0, 2, 0, 0, 24);
+        gl.addColorStop(0, "rgba(255,230,110,0.75)"); gl.addColorStop(1, "rgba(255,230,110,0)");
+        g.fillStyle = gl; g.beginPath(); g.arc(0, 0, 24, 0, Math.PI * 2); g.fill();
+      }
+      const fl = Math.sin(time / 28 + ph) * 0.5;
+      g.fillStyle = golden ? "rgba(255,244,170,0.8)" : "rgba(220,240,255,0.7)";
+      g.strokeStyle = golden ? "rgba(190,150,30,0.6)" : "rgba(80,100,130,0.5)"; g.lineWidth = 0.8;
+      ell(g, -3, -6, 6.5, 3, -0.7 + fl); fo(g);
+      ell(g, 3, -6, 6.5, 3, 0.7 - fl); fo(g);
+      g.fillStyle = golden ? "#c58a12" : "#262b33";
+      ell(g, 0, 0, 3.6, 5.6); g.fill();
+      g.fillStyle = golden ? "#ffd54a" : "#4c5663";
+      ell(g, 0, 3, 3, 2); g.fill();
+      g.fillStyle = "#d33"; ell(g, -1.4, -4.2, 1.1, 1.1); g.fill(); ell(g, 1.4, -4.2, 1.1, 1.1); g.fill();
+      g.restore();
+    }
+
+    function drawDragonfly(g, x, y, time, ph) {
+      g.save();
+      g.translate(x, y);
+      g.lineJoin = "round"; g.lineCap = "round";
+      const fl = Math.sin(time / 30 + ph) * 0.45;
+      // the dragonfly flies to the left
+      g.fillStyle = "rgba(210,235,255,0.65)";
+      g.strokeStyle = "rgba(70,100,130,0.6)"; g.lineWidth = 1;
+      ell(g, -2, -9, 15, 4, -0.25 + fl); fo(g);
+      ell(g, 7, -9, 15, 4, 0.1 - fl); fo(g);
+      ell(g, -2, 9, 15, 3.4, 0.25 - fl * 0.6); fo(g);
+      ell(g, 7, 9, 15, 3.4, -0.1 + fl * 0.6); fo(g);
+      g.strokeStyle = "#1f8a8a"; g.lineWidth = 4.4;
+      g.beginPath(); g.moveTo(-18, 0); g.lineTo(26, 0); g.stroke();
+      g.strokeStyle = "#4ad0c8"; g.lineWidth = 2.4; g.stroke();
+      g.strokeStyle = "#d64a3a"; g.lineWidth = 2; g.setLineDash([3, 4]);
+      g.beginPath(); g.moveTo(26, 0); g.lineTo(54, 0); g.stroke(); g.setLineDash([]);
+      g.fillStyle = "#1f8a8a"; ell(g, -20, 0, 7, 5.6); g.fill();
+      g.fillStyle = "#e33"; ell(g, -23, -2, 3.2, 3.2); g.fill();
+      g.fillStyle = "#fff"; ell(g, -24, -3, 1, 1); g.fill();
+      g.restore();
+    }
+
+    function drawLeapFish(g, e, time) {
+      g.save();
+      g.translate(e.x, e.y);
+      g.rotate(Math.atan2(e.vy, 70));
+      g.lineJoin = "round";
+      const wag = Math.sin(time / 60) * 0.3;
+      g.fillStyle = "#d8553a"; g.strokeStyle = "rgba(60,10,10,0.55)"; g.lineWidth = 1.4;
+      g.save(); g.translate(-26, 0); g.rotate(wag);
+      g.beginPath(); g.moveTo(8, 0); g.lineTo(-14, -13); g.lineTo(-9, 0); g.lineTo(-14, 13); g.closePath(); fo(g);
+      g.restore();
+      ell(g, 0, 0, 28, 15); fo(g);
+      g.fillStyle = "#f2b36a"; ell(g, 2, 6, 20, 7); g.fill();
+      g.fillStyle = "#b0402c";
+      g.beginPath(); g.moveTo(-6, -13); g.lineTo(2, -24); g.lineTo(10, -13); g.closePath(); fo(g);
+      // eye + mouth full of teeth
+      g.fillStyle = "#fff"; ell(g, 14, -4, 4.6, 4.6); fo(g);
+      g.fillStyle = "#c00"; ell(g, 15, -4, 2.2, 2.2); g.fill();
+      g.strokeStyle = "#3a0a0a"; g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(8, -10); g.lineTo(21, -6); g.stroke();
+      g.fillStyle = "#3a0a0a"; ell(g, 24, 4, 6, 4.4); g.fill();
+      g.fillStyle = "#fff";
+      for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(19 + k * 3.4, 1.4); g.lineTo(20.6 + k * 3.4, 5); g.lineTo(22.2 + k * 3.4, 1.4); g.fill(); }
+      g.restore();
+    }
+
+    function drawBird(g, x, y, time) {
+      g.save();
+      g.translate(x, y);
+      g.lineJoin = "round"; g.lineCap = "round";
+      const fl = Math.sin(time / 55);
+      // the bird flies to the left
+      g.fillStyle = "#2f7fd8"; g.strokeStyle = "rgba(10,30,70,0.5)"; g.lineWidth = 1.4;
+      g.save(); g.translate(8, -4); g.rotate(-0.5 + fl * 0.7);
+      ell(g, 10, 0, 17, 6, 0); fo(g);
+      g.restore();
+      ell(g, 0, 0, 24, 12); fo(g);
+      g.fillStyle = "#f08a3c"; ell(g, -2, 5, 17, 6.4); g.fill();
+      g.fillStyle = "#2f7fd8";
+      g.beginPath(); g.moveTo(20, -3); g.lineTo(38, -6); g.lineTo(34, 4); g.closePath(); fo(g);
+      g.save(); g.translate(8, -2); g.rotate(0.5 - fl * 0.5);
+      ell(g, 10, 0, 15, 5, 0); fo(g);
+      g.restore();
+      // head with a long beak
+      g.fillStyle = "#2f7fd8"; ell(g, -20, -4, 10, 9); fo(g);
+      g.fillStyle = "#222";
+      g.beginPath(); g.moveTo(-28, -6); g.lineTo(-52, -2); g.lineTo(-28, -1); g.closePath(); g.fill();
+      g.fillStyle = "#fff"; ell(g, -22, -6, 3.6, 3.6); g.fill();
+      g.fillStyle = "#c00"; ell(g, -23, -6, 1.8, 1.8); g.fill();
+      g.strokeStyle = "#3a0a0a"; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(-27, -12); g.lineTo(-17, -8); g.stroke();
+      g.restore();
+    }
+
+    function drawEnemy(g, e, time) {
+      const sx = e.x - camX;
+      if (e.type === "dragon") drawDragonfly(g, sx, e.y, time, e.ph);
+      else if (e.type === "fish") {
+        if (!e.leap) {
+          // warning: ripples and bubbles at the place where it will jump
+          const k = 1 - Math.max(0, e.warn) / 1.5;
+          g.save();
+          g.strokeStyle = "rgba(255,255,255,0.8)"; g.lineWidth = 2;
+          for (let r = 0; r < 3; r++) {
+            const rr = ((time / 500 + r / 3) % 1) * 34 + 6;
+            g.globalAlpha = 1 - (rr - 6) / 34;
+            g.beginPath(); g.ellipse(sx, WATER_Y + 2, rr * 1.4, rr * 0.4, 0, 0, Math.PI * 2); g.stroke();
+          }
+          g.globalAlpha = 1;
+          g.fillStyle = "rgba(255,255,255,0.75)";
+          for (let b = 0; b < 4; b++) {
+            const by = WATER_Y + 14 - ((time / 6 + b * 40) % 46);
+            g.beginPath(); g.arc(sx + Math.sin(time / 200 + b) * 7, by, 2 + b % 2, 0, Math.PI * 2); g.fill();
+          }
+          if (Math.floor(time / 160) % 2 === 0 || k > 0.8) {
+            g.fillStyle = "#ff5a3c"; g.font = "bold 26px Arial"; g.textAlign = "center";
+            g.strokeStyle = "rgba(60,10,10,0.8)"; g.lineWidth = 4;
+            g.strokeText("!", sx, WATER_Y - 22); g.fillText("!", sx, WATER_Y - 22);
+          }
+          g.restore();
+        } else if (e.y < WATER_Y + 28) {
+          g.save();
+          g.beginPath(); g.rect(sx - 60, 0, 120, WATER_Y + 8); g.clip();
+          drawLeapFish(g, { x: sx, y: e.y, vy: e.vy }, time);
+          g.restore();
+        }
+      } else {
+        if (e.warn > 0) {
+          if (Math.floor(time / 130) % 2 === 0) {
+            g.save();
+            g.fillStyle = "#ff5a3c"; g.strokeStyle = "rgba(60,10,10,0.8)"; g.lineWidth = 3;
+            g.beginPath(); g.moveTo(W - 14, e.y); g.lineTo(W - 46, e.y - 20); g.lineTo(W - 46, e.y + 20); g.closePath(); g.fill(); g.stroke();
+            g.fillStyle = "#fff"; g.font = "bold 20px Arial"; g.textAlign = "center";
+            g.fillText("!", W - 36, e.y + 7);
+            g.restore();
+          }
+        } else drawBird(g, sx, e.y, time);
+      }
+    }
+
+    function drawLilyFlower(g, x, y, time) {
+      g.save();
+      g.translate(x, y);
+      g.fillStyle = "#ffb3d1"; g.strokeStyle = "rgba(160,60,100,0.5)"; g.lineWidth = 1;
+      for (let i = 0; i < 7; i++) {
+        const a = -Math.PI / 2 + (i - 3) * 0.42;
+        g.save(); g.rotate(a + Math.PI / 2 - 0.0);
+        g.beginPath(); g.ellipse(0, -9, 3.4, 9, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.restore();
+      }
+      g.fillStyle = "#ffe066"; ell(g, 0, -3, 3, 2.4); g.fill();
+      g.restore();
+    }
+
+    function drawPad(g, p, time) {
+      const sx = padX(p) - camX;
+      if (sx < -140 || sx > W + 140) return;
+      const sink = p.sink;
+      const bob = Math.sin(time / 600 + p.id * 1.7) * 1.6 + sink * 10;
+      const y = WATER_Y + 3 + bob;
+      const r = p.r * (1 - sink * 0.12);
+      const ry = r * 0.24;
+      g.save();
+      g.translate(sx, y);
+      // the shadow in the water
+      g.fillStyle = "rgba(10,60,80,0.25)";
+      ell(g, 0, 7, r * 1.02, ry * 1.05); g.fill();
+      // the pad (it turns brown when it is about to sink)
+      const brown = Math.min(1, sink * 1.3);
+      const gr = g.createLinearGradient(0, -ry, 0, ry);
+      gr.addColorStop(0, "hsl(" + (118 - brown * 70) + "," + (55 - brown * 10) + "%," + (50 - brown * 12) + "%)");
+      gr.addColorStop(1, "hsl(" + (126 - brown * 80) + "," + (55 - brown * 10) + "%," + (34 - brown * 8) + "%)");
+      g.fillStyle = gr;
+      g.strokeStyle = "rgba(20,70,30," + (0.6) + ")"; g.lineWidth = 2;
+      g.beginPath();
+      g.ellipse(0, 0, r, ry, 0, 0.18, Math.PI * 2 - 0.18);
+      g.lineTo(0, 0);
+      g.closePath();
+      g.fill(); g.stroke();
+      // veins
+      g.strokeStyle = "rgba(255,255,255,0.22)"; g.lineWidth = 1.2;
+      for (let k = 0; k < 7; k++) {
+        const a = 0.5 + k * 0.85;
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a) * r * 0.9, Math.sin(a) * ry * 0.9); g.stroke();
+      }
+      g.restore();
+      if (p.flower) drawLilyFlower(g, sx - p.r * 0.45, y - 1, time);
+      // water ripple ring
+      g.strokeStyle = "rgba(255,255,255," + (0.25 + sink * 0.3) + ")"; g.lineWidth = 1.4;
+      g.beginPath(); g.ellipse(sx, y + 3, r * (1.08 + sink * 0.12), ry * 1.25, 0, 0, Math.PI * 2); g.stroke();
+    }
+
+    // ---- Drawing: the pond ----
+    // Colors of the 5 places: sky top, sky bottom, far hills, middle trees, near reeds, leaves, water top, water bottom
+    const PAL = [
+      { st: [120, 202, 244], sb: [214, 240, 232], hill: [150, 204, 160], mid: [96, 164, 100], near: [66, 128, 70],  leaf: [74, 160, 74],  wt: [96, 192, 208], wb: [44, 134, 168] },
+      { st: [172, 206, 210], sb: [226, 238, 232], hill: [164, 200, 188], mid: [112, 162, 134], near: [78, 120, 96], leaf: [84, 150, 100], wt: [124, 190, 196], wb: [66, 132, 154] },
+      { st: [246, 164, 110], sb: [255, 224, 154], hill: [200, 152, 122], mid: [134, 132, 80], near: [96, 100, 56], leaf: [130, 150, 60], wt: [240, 176, 128], wb: [150, 104, 124] },
+      { st: [120, 138, 160], sb: [172, 188, 198], hill: [122, 152, 152], mid: [72, 114, 100],  near: [52, 90, 78],  leaf: [58, 118, 86],  wt: [98, 134, 154], wb: [56, 90, 116] },
+      { st: [26, 34, 82],    sb: [68, 82, 132],   hill: [52, 70, 110],   mid: [40, 76, 86],    near: [30, 60, 70],  leaf: [40, 96, 92],   wt: [48, 78, 132], wb: [26, 44, 94] }
+    ];
+
+    function palMix(key, sf) {
+      const i = Math.max(0, Math.min(3, Math.floor(sf)));
+      const t = Math.max(0, Math.min(1, sf - i));
+      const a = PAL[i][key], b = PAL[i + 1][key];
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+    }
+
+    function rgb(c, k) {
+      k = k === undefined ? 1 : k;
+      return "rgb(" + Math.round(c[0] * k) + "," + Math.round(c[1] * k) + "," + Math.round(c[2] * k) + ")";
+    }
+
+    function hash(n) {
+      const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+      return s - Math.floor(s);
+    }
+
+    function stageW(i, sf) {
+      return Math.max(0, 1 - Math.abs(sf - i));
+    }
+
+    // g = context, w/h = size, wy = where the water starts, cam = camera x
+    function drawPond(g, w, h, wy, cam, sf, time, sc) {
+      const sg = g.createLinearGradient(0, 0, 0, wy);
+      sg.addColorStop(0, rgb(palMix("st", sf))); sg.addColorStop(1, rgb(palMix("sb", sf)));
+      g.fillStyle = sg; g.fillRect(0, 0, w, wy);
+
+      // the sun, going down, and then the moon
+      const night = stageW(4, sf), sunset = stageW(2, sf);
+      const sunY = (80 + sunset * 120 + stageW(3, sf) * 20) * sc;
+      if (night < 0.9) {
+        const col = sunset > 0.1 ? "255,170,90" : "255,244,190";
+        const sgr = g.createRadialGradient(w * 0.74, sunY, 4, w * 0.74, sunY, 90 * sc);
+        sgr.addColorStop(0, "rgba(" + col + "," + (0.9 * (1 - night)) + ")"); sgr.addColorStop(1, "rgba(" + col + ",0)");
+        g.fillStyle = sgr; g.fillRect(0, 0, w, wy);
+      }
+      if (night > 0.05) {
+        g.globalAlpha = night;
+        g.fillStyle = "#f4f4e4"; g.beginPath(); g.arc(w * 0.78, 70 * sc, 22 * sc, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "rgba(60,70,120,0.5)"; g.beginPath(); g.arc(w * 0.78 + 8 * sc, 66 * sc, 19 * sc, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#fff";
+        for (let i = 0; i < 34; i++) {
+          const tw = 0.4 + 0.6 * Math.abs(Math.sin(time / 700 + i));
+          g.globalAlpha = night * tw;
+          g.fillRect(hash(i) * w, hash(i + 50) * wy * 0.6, 2, 2);
+        }
+        g.globalAlpha = 1;
+      }
+
+      // far hills
+      g.fillStyle = rgb(palMix("hill", sf));
+      g.beginPath(); g.moveTo(0, wy);
+      for (let x = 0; x <= w; x += 10) g.lineTo(x, wy - (46 + 26 * Math.sin((x + cam * 0.08) / 130) + 14 * Math.sin((x + cam * 0.08) / 47)) * sc);
+      g.lineTo(w, wy); g.closePath(); g.fill();
+
+      // trees in the middle
+      const m1 = palMix("mid", sf);
+      for (let i = -1; i < w / 90 + 2; i++) {
+        const t = Math.floor((cam * 0.22) / 90) + i;
+        const px = t * 90 - cam * 0.22 + 90 * 0.5;
+        const hh = (46 + hash(t) * 40) * sc;
+        g.fillStyle = rgb(m1, 0.75 + hash(t + 9) * 0.25);
+        g.fillRect(px - 3 * sc, wy - hh, 6 * sc, hh);
+        g.beginPath(); g.arc(px, wy - hh, (22 + hash(t + 4) * 12) * sc, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc(px - 14 * sc, wy - hh + 10 * sc, 15 * sc, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.arc(px + 15 * sc, wy - hh + 12 * sc, 14 * sc, 0, Math.PI * 2); g.fill();
+      }
+
+      // reeds and cattails on the bank
+      const rc = palMix("near", sf);
+      g.strokeStyle = rgb(rc); g.lineCap = "round";
+      for (let i = -1; i < w / 38 + 2; i++) {
+        const t = Math.floor((cam * 0.5) / 38) + i;
+        const px = t * 38 - cam * 0.5 + hash(t) * 20;
+        const hh = (34 + hash(t + 3) * 34) * sc;
+        const sw = Math.sin(time / 900 + t) * 3 * sc;
+        g.lineWidth = 2.4 * sc;
+        g.beginPath(); g.moveTo(px, wy + 2); g.quadraticCurveTo(px + sw * 0.4, wy - hh * 0.5, px + sw, wy - hh); g.stroke();
+        if (hash(t + 7) < 0.4) {
+          g.fillStyle = "#6a4a2a";
+          g.beginPath(); g.ellipse(px + sw, wy - hh + 8 * sc, 3 * sc, 9 * sc, 0, 0, Math.PI * 2); g.fill();
+        }
+      }
+
+      // the water
+      const wg = g.createLinearGradient(0, wy, 0, h);
+      wg.addColorStop(0, rgb(palMix("wt", sf))); wg.addColorStop(1, rgb(palMix("wb", sf)));
+      g.fillStyle = wg; g.fillRect(0, wy, w, h - wy);
+      g.strokeStyle = "rgba(255,255,255,0.28)"; g.lineWidth = 1.4 * sc;
+      for (let r = 0; r < 5; r++) {
+        const yy = wy + (10 + r * 26) * sc;
+        const off = (cam * (0.6 + r * 0.12) + time * 0.02 * (r % 2 ? 1 : -1)) % 120;
+        for (let x = -120; x < w + 120; x += 120) {
+          g.beginPath(); g.moveTo(x - off, yy); g.quadraticCurveTo(x - off + 15, yy - 3, x - off + 30, yy); g.quadraticCurveTo(x - off + 45, yy + 3, x - off + 60, yy); g.stroke();
+        }
+      }
+      // rain
+      const rain = stageW(3, sf);
+      if (rain > 0.05) {
+        g.strokeStyle = "rgba(210,225,245," + (0.5 * rain) + ")"; g.lineWidth = 1.2;
+        for (let i = 0; i < 60; i++) {
+          const rx = (hash(i) * (w + 80) - ((time * 0.35 + i * 31) % 40) * 0.0) ;
+          const ry = ((hash(i + 20) * h * 2 + time * 0.9) % (h + 40)) - 20;
+          g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx - 6, ry + 16); g.stroke();
+        }
+      }
+    }
+
+    // ---- Drawing: the game ----
+    function drawOverlay(lines) {
+      ctx.fillStyle = "rgba(10, 16, 40, 0.62)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.font = "40px Arial";
+      ctx.fillText(lines[0], canvas.width / 2, canvas.height / 2 - 50);
+      ctx.font = "18px Arial";
+      for (let i = 1; i < lines.length; i++) {
+        ctx.fillText(lines[i], canvas.width / 2, canvas.height / 2 - 15 + (i - 1) * 28);
+      }
+    }
+
+    function frogAlpha(time) {
+      if (skillLeft.ghost > 0) {
+        return skillLeft.ghost < 1500 ? 0.5 + 0.4 * (Math.floor(time / 120) % 2) : 0.5;
+      }
+      if (invul > 0) return 0.4 + 0.5 * (Math.floor(time / 100) % 2);
+      return undefined;
+    }
+
+    function drawJumpPath() {
+      const v = V_MIN + (V_MAX - V_MIN) * fr.charge;
+      const R = v * v * SIN2A / G;
+      const T = 2 * v * Math.sin(ANGLE) / G;
+      for (let t = 0.06; t < T - 0.02; t += 0.06) {
+        const px = fr.x + v * Math.cos(ANGLE) * t - camX;
+        const py = SURF - 24 - (v * Math.sin(ANGLE) * t - 0.5 * G * t * t);
+        const k = 1 - t / T;
+        ctx.fillStyle = "rgba(255,255,255," + (0.25 + 0.5 * k) + ")";
+        ctx.beginPath(); ctx.arc(px, py, 2.2 + 1.5 * k, 0, Math.PI * 2); ctx.fill();
+      }
+      // where you will land
+      const lx = fr.x + R;
+      let on = false;
+      for (const p of pads) if (!p.sunk && Math.abs(lx - padX(p)) < p.r * 0.92) on = true;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = on ? "rgba(190,255,120,0.95)" : "rgba(255,120,100,0.9)";
+      ctx.beginPath(); ctx.ellipse(lx - camX, WATER_Y + 2, 20, 6, 0, 0, Math.PI * 2); ctx.stroke();
+      if (!on) {
+        ctx.beginPath(); ctx.moveTo(lx - camX - 7, WATER_Y - 6); ctx.lineTo(lx - camX + 7, WATER_Y + 10); ctx.moveTo(lx - camX + 7, WATER_Y - 6); ctx.lineTo(lx - camX - 7, WATER_Y + 10); ctx.stroke();
+      }
+    }
+
+    function draw(time) {
+      drawPond(ctx, W, H, WATER_Y - 6, camX, shownStage, time, 1);
+
+      // fish behind the pads, then the pads
+      for (const e of enemies) if (e.type === "fish") drawEnemy(ctx, e, time);
+      for (const p of pads) drawPad(ctx, p, time);
+
+      for (const it of items) {
+        const sx = it.x - camX;
+        if (sx > -40 && sx < W + 40) drawFlyShape(ctx, sx, it.y, it.type === "golden", time, it.phase);
+      }
+
+      // the frog
+      const sitPad = fr.mode === "sit" ? fr.pad : null;
+      const bob = sitPad ? Math.sin(time / 600 + sitPad.id * 1.7) * 1.6 + sitPad.sink * 10 : 0;
+      let rot = 0;
+      if (fr.mode === "air") rot = Math.max(-0.7, Math.min(0.9, Math.atan2(fr.vy, Math.max(80, fr.vx)) * 0.9));
+      const fx = fr.x - camX, fy = fr.y + bob;
+      const shaky = fr.charging ? Math.sin(time / 30) * fr.charge * 1.2 : 0;
+      if (SHOW_PATH && fr.charging && fr.mode === "sit" && state === "playing") drawJumpPath();
+      drawFrog(ctx, fx + shaky, fy, getSkin(), time, {
+        scale: 1.15, mode: fr.mode, rot: rot, crouch: fr.charging ? fr.charge : 0, land: fr.land,
+        alpha: frogAlpha(time), dead: dead, acc: accOn, phase: worldTime
+      });
+      if (skillLeft.shield > 0 && !dead) drawShieldBubble(ctx, fx, fy - 26, time);
+
+      for (const e of enemies) if (e.type !== "fish") drawEnemy(ctx, e, time);
+
+      // the power bar of the jump
+      if (fr.charging && fr.mode === "sit" && state === "playing") {
+        const bw = 64, bx = fx - bw / 2, byy = fy - 84;
+        ctx.fillStyle = "rgba(0,0,0,0.45)"; rrect(ctx, bx - 2, byy - 2, bw + 4, 10, 5); ctx.fill();
+        const gr = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+        gr.addColorStop(0, "#7be05a"); gr.addColorStop(0.6, "#ffe066"); gr.addColorStop(1, "#ff6a4a");
+        ctx.fillStyle = gr; rrect(ctx, bx, byy, Math.max(4, bw * fr.charge), 6, 3); ctx.fill();
+      }
+
+      // particles
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
+        if (p.text) {
+          ctx.fillStyle = p.color;
+          ctx.font = "bold 18px Arial";
+          ctx.textAlign = "center";
+          ctx.strokeStyle = "rgba(20,50,50,0.8)";
+          ctx.lineWidth = 3;
+          ctx.strokeText(p.text, p.x, p.y);
+          ctx.fillText(p.text, p.x, p.y);
+        } else {
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // the sinking warning
+      if (state === "playing" && fr.mode === "sit" && fr.pad && fr.pad.stand !== null && fr.pad.stand < 1.1) {
+        ctx.textAlign = "center";
+        ctx.font = "bold 22px Arial";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(60,10,10,0.8)";
+        ctx.fillStyle = "#ffb3a0";
+        ctx.strokeText("The pad is sinking - jump!", W / 2, 120);
+        ctx.fillText("The pad is sinking - jump!", W / 2, 120);
+      }
+
+      if (time < levelUpUntil) {
+        ctx.textAlign = "center";
+        ctx.font = "bold 28px Arial";
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgba(20,50,50,0.85)";
+        ctx.fillStyle = "#fff3a8";
+        const msg = "Level " + level + " - " + getRank() + "!";
+        ctx.strokeText(msg, W / 2, 70);
+        ctx.fillText(msg, W / 2, 70);
+      }
+
+      if (state === "ready") {
+        if (resumed) {
+          drawOverlay(["Welcome back!", "Press Space or tap to keep going"]);
+        } else {
+          drawOverlay(["Frog", "Press Space or tap to start", "Hold Space (or touch the screen) to charge a jump, let go to jump!", "Land on the lily pads - they sink if you stay too long.", "(1-6 = skills, M = menu)"]);
+        }
+      }
+      if (state === "continue") {
+        const cost = CONTINUE_COSTS[continuesUsed];
+        drawOverlay([
+          "Splash!",
+          "Score: " + score + "   Distance: " + Math.floor(dist) + " m",
+          "Continue? Cost: " + cost + " coins (you have " + coins + ")",
+          coins >= cost ? "C = continue     Space = give up" : "Not enough coins     Space = give up"
+        ]);
+      }
+      if (state === "over") {
+        drawOverlay([
+          "Game Over",
+          "Score: " + score + "   Distance: " + Math.floor(dist) + " m",
+          "Coins earned: +" + runCoins,
+          "Best: " + best,
+          "Space = play again",
+          "M = menu"
+        ]);
+      }
+    }
+
+    function drawSkillIcon(g, id, time, cx, cy, scale) {
+      g.save();
+      g.translate(cx, cy);
+      g.scale(scale, scale);
+      g.lineJoin = "round";
+      g.lineCap = "round";
+
+      if (id === "ghost") {
+        g.translate(0, Math.sin(time / 300) * 2);
+        g.shadowColor = "#8fd3ff";
+        g.shadowBlur = 8;
+        g.fillStyle = "#eaf2ff";
+        g.beginPath();
+        g.arc(0, -2, 13, Math.PI, 0);
+        g.lineTo(13, 14);
+        g.quadraticCurveTo(8.7, 8, 4.3, 14);
+        g.quadraticCurveTo(0, 8, -4.3, 14);
+        g.quadraticCurveTo(-8.7, 8, -13, 14);
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.fillStyle = "#1a1a2e";
+        g.beginPath(); g.ellipse(-5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(5, -4, 2.2, 3, 0, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.ellipse(0, 3, 2.4, 3, 0, 0, Math.PI * 2); g.fill();
+      }
+
+      if (id === "slow") {
+        g.fillStyle = "#2d3a66";
+        g.strokeStyle = "#e8eefc";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 2;
+        for (let k = 0; k < 4; k++) {
+          const a = k * Math.PI / 2;
+          g.beginPath();
+          g.moveTo(Math.cos(a) * 10, Math.sin(a) * 10);
+          g.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+          g.stroke();
+        }
+        const ma = time / 1200 - Math.PI / 2;
+        const ha = time / 9000 - Math.PI / 2;
+        g.strokeStyle = "#8fd3ff";
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ma) * 10, Math.sin(ma) * 10);
+        g.stroke();
+        g.strokeStyle = "#ffffff";
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(ha) * 6, Math.sin(ha) * 6);
+        g.stroke();
+      }
+
+      if (id === "double") {
+        const sx = Math.max(0.12, Math.abs(Math.cos(time / 450)));
+        g.scale(sx, 1);
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(0, 0, 14, 0, Math.PI * 2);
+        g.fill();
+        g.stroke();
+        g.lineWidth = 1.5;
+        g.beginPath();
+        g.arc(0, 0, 10, 0, Math.PI * 2);
+        g.stroke();
+        g.fillStyle = "#8a6100";
+        g.font = "bold 13px Arial";
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText("x2", 0, 1);
+      }
+
+      if (id === "magnet") {
+        g.lineCap = "butt";
+        g.lineWidth = 8;
+        g.strokeStyle = "#e94560";
+        g.beginPath();
+        g.moveTo(-11, -9);
+        g.lineTo(-11, 2);
+        g.arc(0, 2, 11, Math.PI, 0, true);
+        g.lineTo(11, -9);
+        g.stroke();
+        g.fillStyle = "#dfe6f2";
+        g.fillRect(-15, -12, 8, 7);
+        g.fillRect(7, -12, 8, 7);
+
+        const starts = [[-24, -24], [0, -30], [24, -24]];
+        for (let k = 0; k < 3; k++) {
+          const t = ((time / 900) + k / 3) % 1;
+          const x = starts[k][0] * (1 - t);
+          const y = starts[k][1] + (-8 - starts[k][1]) * t;
+          g.globalAlpha = 1 - t * 0.8;
+          g.fillStyle = "#ffe066";
+          g.beginPath();
+          g.arc(x, y, 2.4, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.globalAlpha = 1;
+      }
+
+      if (id === "lucky") {
+        const pulse = 1 + Math.sin(time / 250) * 0.08;
+        g.rotate(Math.sin(time / 700) * 0.15);
+        g.scale(pulse, pulse);
+        g.shadowColor = "gold";
+        g.shadowBlur = 8;
+        g.fillStyle = "#ffd23f";
+        g.strokeStyle = "#b8860b";
+        g.lineWidth = 2;
+        g.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? 14 : 6;
+          const a = -Math.PI / 2 + i * Math.PI / 5;
+          const x = Math.cos(a) * r;
+          const y = Math.sin(a) * r;
+          if (i === 0) g.moveTo(x, y);
+          else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.stroke();
+
+        g.strokeStyle = "#ffffff";
+        g.lineWidth = 1.5;
+        g.globalAlpha = 0.5 + 0.5 * Math.sin(time / 200);
+        g.beginPath();
+        g.moveTo(15, -16); g.lineTo(15, -10);
+        g.moveTo(12, -13); g.lineTo(18, -13);
+        g.moveTo(-17, 8); g.lineTo(-17, 14);
+        g.moveTo(-20, 11); g.lineTo(-14, 11);
+        g.stroke();
+      }
+
+      if (id === "shield") {
+        const pulse = 1 + Math.sin(time / 300) * 0.04;
+        g.scale(pulse, pulse);
+        g.shadowColor = "#6cf"; g.shadowBlur = 8;
+        g.fillStyle = "#3a7bd5"; g.strokeStyle = "#e8f4ff"; g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(0, -15); g.quadraticCurveTo(10, -12, 14, -12);
+        g.quadraticCurveTo(14, 6, 0, 16); g.quadraticCurveTo(-14, 6, -14, -12);
+        g.quadraticCurveTo(-10, -12, 0, -15);
+        g.closePath(); g.fill(); g.shadowBlur = 0; g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = 3;
+        g.beginPath(); g.moveTo(-6, 0); g.lineTo(-1.5, 5); g.lineTo(7, -6); g.stroke();
+      }
+
+      g.restore();
+    }
+
+    function drawSkillSlot(e, time) {
+      const g = e.g;
+      const sk = skills[e.idx];
+      const count = skillCounts[sk.id];
+      const left = skillLeft[sk.id];
+      const active = left > 0;
+
+      g.clearRect(0, 0, 64, 64);
+      g.fillStyle = "#1f2a4d";
+      rrect(g, 1.5, 1.5, 61, 61, 10);
+      g.fill();
+      g.lineWidth = 2;
+      g.strokeStyle = active ? "gold" : "#2d3a66";
+      g.stroke();
+
+      g.save();
+      g.globalAlpha = (count > 0 || active) ? 1 : 0.35;
+      drawSkillIcon(g, sk.id, time, 32, 30, 1.25);
+      g.restore();
+
+      // key number (top left)
+      g.fillStyle = "#aab";
+      g.font = "bold 12px Arial";
+      g.textAlign = "left";
+      g.textBaseline = "top";
+      g.fillText(String(e.idx + 1), 7, 6);
+
+      // how many you own (bottom right)
+      g.font = "bold 17px Arial";
+      g.textAlign = "right";
+      g.textBaseline = "bottom";
+      g.lineJoin = "round";
+      g.lineWidth = 4;
+      g.strokeStyle = "#16213e";
+      g.strokeText(String(count), 58, 55);
+      g.fillStyle = count > 0 ? "gold" : "#8892b0";
+      g.fillText(String(count), 58, 55);
+
+      // time left
+      if (active) {
+        g.fillStyle = "gold";
+        g.fillRect(8, 58, 48 * left / sk.duration, 3);
+      }
+    }
+
+    // ---- Drawing: menu screen ----
+    function drawMenu(time) {
+      const w = menuCanvas.width;
+      const sf = Math.abs(((time / 4000) % 8) - 4);
+      drawPond(mctx, w, 200, 150, time * 0.05, sf, time, 0.6);
+
+      // lily pads on the water, and flies to catch
+      const x0 = w - (((time * 0.06) % (w + 200)) - 20);
+      for (let i = 0; i < 3; i++) {
+        const px = ((x0 + i * 230) % (w + 260)) - 60;
+        const r = 40;
+        mctx.fillStyle = "#4aa653"; mctx.strokeStyle = "rgba(20,70,30,0.6)"; mctx.lineWidth = 1.5;
+        mctx.beginPath(); mctx.ellipse(px, 156, r, r * 0.24, 0, 0.18, Math.PI * 2 - 0.18); mctx.lineTo(px, 156); mctx.closePath(); mctx.fill(); mctx.stroke();
+      }
+      for (let i = 0; i < 3; i++) drawFlyShape(mctx, 360 + i * 60, 66 + Math.sin(i * 1.4 + time / 700) * 14, i === 2, time, i);
+
+      // the frog hops up and down on its pad
+      const hop = Math.max(0, Math.sin(time / 500));
+      const fy = 152 - hop * 52;
+      mctx.fillStyle = "#4aa653"; mctx.strokeStyle = "rgba(20,70,30,0.6)"; mctx.lineWidth = 1.5;
+      mctx.beginPath(); mctx.ellipse(170, 156, 58, 14, 0, 0.18, Math.PI * 2 - 0.18); mctx.lineTo(170, 156); mctx.closePath(); mctx.fill(); mctx.stroke();
+      drawFrog(mctx, 170, fy, getSkin(), time, { scale: 1.35, mode: hop > 0.05 ? "air" : "sit", rot: hop > 0.05 ? -0.35 + (1 - hop) * 0.6 : 0, crouch: hop > 0.05 ? 0 : 0.5 + 0.5 * Math.sin(time / 500), acc: accOn, phase: time / 1000 });
+
+      const label = getSkin().name + " - " + STAGE_NAMES[Math.round(sf)];
+      if (label !== lastLabel) {
+        lastLabel = label;
+        document.getElementById("previewLabel").textContent = label;
+      }
+    }
+
+    // Small frogs on the skin cards
+    function drawSkinPreview(e, time) {
+      const g = e.g;
+      const c = e.canvas;
+      const gr = g.createLinearGradient(0, 0, 0, c.height);
+      gr.addColorStop(0, "#bfe8f4"); gr.addColorStop(1, "#5fb8d0");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#4aa653";
+      g.beginPath(); g.ellipse(90, 52, 44, 9, 0, 0, Math.PI * 2); g.fill();
+      drawFrog(g, 90, 50 - Math.max(0, Math.sin(time / 500 + e.idx)) * 6, e.skin, time, { scale: 0.62, mode: "sit", phase: time / 1000 + e.idx });
+    }
+
+    // Accessory cards: the frog wears only this item
+    function drawAccPreview(e, time) {
+      const g = e.g;
+      const c = e.canvas;
+      const gr = g.createLinearGradient(0, 0, 0, c.height);
+      gr.addColorStop(0, "#cdeef6"); gr.addColorStop(1, "#6fc4d8");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, c.width, c.height);
+      g.fillStyle = "#4aa653";
+      g.beginPath(); g.ellipse(90, 66, 52, 9, 0, 0, Math.PI * 2); g.fill();
+      const worn = {};
+      worn[e.acc.slot] = e.acc.id;
+      drawFrog(g, 88, 64, getSkin(), time, { scale: 1.05, mode: "sit", phase: 0, acc: worn });
+    }
+
+    // ---- Accessories panel ----
+    function setAccOpen(v) {
+      accOpen = v;
+      document.getElementById("accBody").classList.toggle("hidden", !v);
+      document.getElementById("accArrow").innerHTML = v ? "&#9652;" : "&#9662;";
+      if (v) renderAccessories();
+    }
+
+    function onAccClick(a) {
+      if (ownedAcc.includes(a.id)) {
+        if (accOn[a.slot] === a.id) {
+          delete accOn[a.slot];
+          showMsg("accMsg", a.name + " removed.");
+        } else {
+          accOn[a.slot] = a.id;
+          showMsg("accMsg", "Your frog is wearing: " + a.name + "!");
+        }
+      } else if (coins >= a.price) {
+        coins -= a.price;
+        ownedAcc.push(a.id);
+        accOn[a.slot] = a.id;
+        checkAchievements();
+        showMsg("accMsg", "You bought " + a.name + "!");
+      } else {
+        showMsg("accMsg", "Not enough coins. You need " + (a.price - coins) + " more.");
+      }
+      saveAll();
+      if (document.activeElement) document.activeElement.blur();
+      updateMenu();
+    }
+
+    function renderAccessories() {
+      const list = document.getElementById("accList");
+      list.innerHTML = "";
+      accPreviews = [];
+      accessories.forEach(function (a) {
+        const owned = ownedAcc.includes(a.id);
+        const worn = accOn[a.slot] === a.id;
+        const card = document.createElement("button");
+        card.className = "card" + (worn ? " equipped" : "") + (!owned && coins < a.price ? " cant" : "");
+
+        const cv = document.createElement("canvas");
+        cv.className = "preview";
+        cv.width = 180;
+        cv.height = 76;
+
+        const name = document.createElement("div");
+        name.textContent = a.name;
+        name.style.fontWeight = "bold";
+
+        const status = document.createElement("small");
+        if (worn) status.textContent = "Wearing - click to remove";
+        else if (owned) status.textContent = "Click to wear";
+        else status.textContent = a.price + " coins";
+
+        card.appendChild(cv);
+        card.appendChild(name);
+        card.appendChild(status);
+        card.addEventListener("click", function () { onAccClick(a); });
+        list.appendChild(card);
+        accPreviews.push({ acc: a, canvas: cv, g: cv.getContext("2d") });
+      });
+    }
+
+
+    function drawSkillPreview(e, time) {
+      e.g.clearRect(0, 0, 48, 48);
+      e.g.fillStyle = "#16213e";
+      rrect(e.g, 0, 0, 48, 48, 8);
+      e.g.fill();
+      drawSkillIcon(e.g, e.skill.id, time, 24, 24, 0.95);
+    }
+
+    // ---- Main loop ----
+    function frame(time) {
+      if (screen === "menu") {
+        drawMenu(time);
+        if (skinsOpen) {
+          for (const e of skinPreviews) drawSkinPreview(e, time);
+        }
+        if (skillsOpen) {
+          for (const e of skillPreviews) drawSkillPreview(e, time);
+        }
+        if (accOpen) {
+          for (const e of accPreviews) drawAccPreview(e, time);
+        }
+      } else {
+        const dtMs = Math.min(50, time - lastFrame);
+        const dt = dtMs / 1000;
+
+        shownStage += (Math.min(4, (level - 1) * 4 / 7) - shownStage) * Math.min(1, dt * 0.5);
+
+        if (state === "playing") {
+          surviveMs += dtMs;
+          if (surviveMs / 1000 > stats.bestSurvive) stats.bestSurvive = surviveMs / 1000;
+          achTimer += dtMs;
+          if (achTimer > 500) {
+            achTimer = 0;
+            checkAchievements();
+          }
+          for (const sk of skills) {
+            if (skillLeft[sk.id] > 0) skillLeft[sk.id] = Math.max(0, skillLeft[sk.id] - dtMs);
+          }
+          update(dt);
+          const dm = Math.floor(dist);
+          if (dm !== lastDist) {
+            lastDist = dm;
+            document.getElementById("dist").textContent = dm;
+          }
+        }
+        updateParticles(dt);
+        draw(time);
+        for (const e of skillSlots) drawSkillSlot(e, time);
+      }
+      lastFrame = time;
+      requestAnimationFrame(frame);
+    }
+
+    buildSkillBar();
+    showScreen("menu");
+    updateMenu();
+    requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
